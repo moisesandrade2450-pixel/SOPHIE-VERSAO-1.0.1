@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Platform, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import LoginScreen from './LoginScreen';
+import UnifiedLoginScreen from './UnifiedLoginScreen';
 import DiretoraTela from './DiretoraTela';
 import SalaTela from './SalaTela';
-import AdminRoute from './AdminRoute';
 import AdminPanelScreen from './AdminPanelScreen';
 import { COLORS } from './constants';
 
@@ -89,10 +88,7 @@ export default function App() {
     }
   };
 
-  const handleUserTypeSelect = (type) => {
-    setUserType(type);
-  };
-
+  
   if (error) {
     return (
       <View style={styles.errorContainer}>
@@ -102,58 +98,13 @@ export default function App() {
     );
   }
 
-  // Se não há usuário logado, mostrar seleção de tipo ou login
+  // Se não há usuário logado, mostrar tela de login unificada
   if (!user) {
-    if (!userType) {
-      // Tela de seleção de tipo de usuário
-      return (
-        <View style={styles.container}>
-          <View style={styles.selectionContainer}>
-            <Text style={styles.title}>SOPHIE</Text>
-            <Text style={styles.subtitle}>Selecione seu tipo de acesso:</Text>
-            
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity 
-                style={styles.userTypeButton} 
-                onPress={() => handleUserTypeSelect('aluno')}
-              >
-                <Text style={styles.userTypeButtonText}>👨‍🎓 Aluno</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.userTypeButton} 
-                onPress={() => handleUserTypeSelect('diretora')}
-              >
-                <Text style={styles.userTypeButtonText}>👩‍🏫 Diretora</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.userTypeButton} 
-                onPress={() => handleUserTypeSelect('admin')}
-              >
-                <Text style={styles.userTypeButtonText}>⚙️ Administração</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <Text style={styles.deviceInfo}>
-              📱 {isMobile ? 'Modo Mobile' : 'Modo Desktop'} | 🌐 {isWeb ? 'Web' : 'Native'}
-            </Text>
-          </View>
-          <StatusBar style="auto" />
-        </View>
-      );
-    }
-
-    // Mostrar tela de login específica para o tipo de usuário
     return (
-      <View style={styles.container}>
-        {userType === 'admin' ? (
-          <AdminRoute onAdminLogin={handleLogin} />
-        ) : (
-          <LoginScreen onLogin={handleLogin} userType={userType} />
-        )}
-        <StatusBar style="auto" />
-      </View>
+      <UnifiedLoginScreen 
+        onLogin={handleLogin} 
+        onBack={() => console.log('Botão voltar pressionado')}
+      />
     );
   }
 

@@ -7,8 +7,14 @@
     "android": "expo start --port 8082 --android",
     "ios": "expo start --port 8082 --ios",
     "web": "expo start --web --port 8080",
+    "web:3000": "expo start --web --port 3000",
+    "web:8081": "expo start --web --port 8081",
+    "web:8082": "expo start --web --port 8082",
+    "web:8083": "expo start --web --port 8083",
     "web:clean": "npx expo start --web --port 8080 --clear --reset-cache",
-    "server": "node server.js"
+    "server": "node server.js",
+    "server:3001": "node server.js --port 3001",
+    "server:8081": "node server.js --port 8081"
   },
   "dependencies": {
     "expo": "~54.0.33",

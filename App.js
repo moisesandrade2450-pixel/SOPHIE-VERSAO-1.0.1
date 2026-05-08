@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     maxWidth: 300,
   },
   userTypeButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 12,

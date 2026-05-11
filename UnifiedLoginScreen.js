@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Image, Dimensions, Animated } from 'react-native';
 import { COLORS, SALAS, CURSOS } from './constants';
 import { accountManager, validarUsuario, validarSenha, validarNome } from './accountManager';
@@ -18,7 +18,7 @@ export default function UnifiedLoginScreen({ onLogin, onBack }) {
   const [contas, setContas] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(fadeAnim, {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Platform, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import UnifiedLoginScreen from './UnifiedLoginScreen';
+import ProfessionalLoginScreen from './ProfessionalLoginScreen';
 import DiretoraTela from './DiretoraTela';
 import SalaTela from './SalaTela';
 import { COLORS } from './constants';
@@ -100,7 +100,7 @@ export default function App() {
   // Se não há usuário logado, mostrar tela de login unificada
   if (!user) {
     return (
-      <UnifiedLoginScreen 
+      <ProfessionalLoginScreen 
         onLogin={handleLogin} 
         onBack={() => console.log('Botão voltar pressionado')}
       />

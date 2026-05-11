@@ -52,8 +52,8 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
   };
 
   const handleAlunoLogin = async () => {
-    if (!usuario.trim() || !senha.trim()) {
-      Alert.alert('Erro', 'Preencha usuário e senha');
+    if (!usuario.trim() || !senha.trim() || !salaSelecionada) {
+      Alert.alert('Erro', 'Preencha sala, usuário e senha');
       return;
     }
 
@@ -65,12 +65,9 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
           role: conta.role,
           nome: conta.nome,
           usuario: conta.usuario,
-          id: conta.id
+          id: conta.id,
+          salaId: salaSelecionada
         };
-        
-        if (conta.role !== 'admin' && conta.role !== 'diretora' && !conta.salaId) {
-          userData.salaId = 'sala1';
-        }
         
         onLogin(userData);
       } else {
@@ -207,10 +204,33 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
           <Text style={styles.smallLogoText}>S</Text>
         </View>
         <Text style={styles.loginTitle}>Acesso do Aluno</Text>
-        <Text style={styles.loginSubtitle}>Entre com suas credenciais</Text>
+        <Text style={styles.loginSubtitle}>Selecione sua sala e entre</Text>
       </View>
 
       <View style={styles.formContainer}>
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Sala</Text>
+          <View style={styles.salaContainer}>
+            {SALAS.map((sala) => (
+              <TouchableOpacity
+                key={sala.id}
+                style={[
+                  styles.salaButton,
+                  salaSelecionada === sala.id && styles.salaButtonSelected
+                ]}
+                onPress={() => setSalaSelecionada(sala.id)}
+              >
+                <Text style={[
+                  styles.salaButtonText,
+                  salaSelecionada === sala.id && styles.salaButtonTextSelected
+                ]}>
+                  {sala.icone} {sala.nome}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Usuário</Text>
           <TextInput
@@ -238,21 +258,24 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
               autoCorrect={false}
             />
             <TouchableOpacity 
-              style={styles.showPasswordButton}
+              style={styles.passwordToggle}
               onPress={() => setMostrarSenha(!mostrarSenha)}
             >
-              <Text style={styles.showPasswordText}>{mostrarSenha ? '👁️' : '👁️‍🗨️'}</Text>
+              <View style={styles.passwordToggleIcon}>
+                <View style={[styles.passwordToggleLine, !mostrarSenha && styles.passwordToggleLineActive]} />
+                <View style={[styles.passwordToggleCircle, !mostrarSenha && styles.passwordToggleCircleActive]} />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
 
         <TouchableOpacity 
-          style={[styles.submitButton, usuario && senha && styles.submitButtonActive]}
+          style={[styles.submitButton, usuario && senha && salaSelecionada && styles.submitButtonActive]}
           onPress={handleAlunoLogin}
-          disabled={!usuario || !senha || carregando}
+          disabled={!usuario || !senha || !salaSelecionada || carregando}
         >
           <Text style={styles.submitButtonText}>
-            {carregando ? '🔄 Entrando...' : '🚀 Acessar'}
+            {carregando ? '🔄 Entrando...' : '🚀 Acessar Sala'}
           </Text>
         </TouchableOpacity>
 
@@ -667,6 +690,79 @@ const styles = StyleSheet.create({
   },
   showPasswordText: {
     fontSize: 20,
+  },
+  salaContainer: {
+    marginBottom: 20,
+  },
+  salaButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 16,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.secondary,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  salaButtonSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  salaButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.dark,
+    textAlign: 'center',
+  },
+  salaButtonTextSelected: {
+    color: COLORS.white,
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: 16,
+    top: 18,
+    padding: 8,
+  },
+  passwordToggleIcon: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  passwordToggleLine: {
+    width: 20,
+    height: 2,
+    backgroundColor: COLORS.secondary,
+    borderRadius: 1,
+    opacity: 0.5,
+  },
+  passwordToggleLineActive: {
+    backgroundColor: COLORS.primary,
+    opacity: 1,
+  },
+  passwordToggleCircle: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: COLORS.white,
+    position: 'absolute',
+    right: 0,
+    borderWidth: 2,
+    borderColor: COLORS.secondary,
+  },
+  passwordToggleCircleActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   submitButton: {
     backgroundColor: COLORS.light,

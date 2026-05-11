@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Platform, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ProfessionalLoginScreen from './ProfessionalLoginScreen';
-import DiretoraTela from './DiretoraTela';
-import SalaTela from './SalaTela';
+import ProfessionalSalaTela from './ProfessionalSalaTela';
+import ProfessionalDiretoraTela from './ProfessionalDiretoraTela';
 import { COLORS } from './constants';
 
 // Capturar erros globais
@@ -111,9 +111,9 @@ export default function App() {
   return (
     <View style={styles.container}>
       {userType === 'diretora' ? (
-        <DiretoraTela user={user} onLogout={handleLogout} />
+        <ProfessionalDiretoraTela user={user} onLogout={handleLogout} />
       ) : (
-        <SalaTela user={user} onLogout={handleLogout} />
+        <ProfessionalSalaTela user={user} onLogout={handleLogout} />
       )}
       <StatusBar style="auto" />
     </View>

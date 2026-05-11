@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Platform, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import ProfessionalLoginScreen from './ProfessionalLoginScreen';
+import SmartLoginScreen from './SmartLoginScreen';
 import ProfessionalSalaTela from './ProfessionalSalaTela';
 import ProfessionalDiretoraTela from './ProfessionalDiretoraTela';
 import { COLORS } from './constants';

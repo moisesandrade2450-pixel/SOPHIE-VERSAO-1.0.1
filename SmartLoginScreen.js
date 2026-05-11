@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Image, Dimensions, Animated, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Image, Dimensions, Animated, StatusBar, FlatList } from 'react-native';
 import { COLORS, SALAS, CURSOS } from './constants';
 import { accountManager, validarUsuario, validarSenha, validarNome } from './accountManager';
 
 const { width, height } = Dimensions.get('window');
 
-export default function ProfessionalLoginScreen({ onLogin, onBack }) {
+export default function SmartLoginScreen({ onLogin, onBack }) {
   const [loginType, setLoginType] = useState(null); // 'aluno', 'diretora'
   const [salasDisponiveis, setSalasDisponiveis] = useState([]);
   const [salaSelecionada, setSalaSelecionada] = useState(null);
@@ -15,11 +15,12 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
   const [confirmSenha, setConfirmSenha] = useState('');
   const [nome, setNome] = useState('');
   const [role, setRole] = useState('diretora');
-  const [salaSelecionada, setSalaSelecionada] = useState(null);
   const [contas, setContas] = useState([]);
-  const [salasDisponiveis, setSalasDisponiveis] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [avisos, setAvisos] = useState([]);
+  const [mostrarFormAviso, setMostrarFormAviso] = useState(false);
+  const [novoAviso, setNovoAviso] = useState({ titulo: '', mensagem: '', tipo: 'aviso' });
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
   useEffect(() => {
     if (loginType === 'aluno' || loginType === 'diretora') {
       carregarContas();
+      carregarSalasDisponiveis();
     }
   }, [loginType]);
 
@@ -44,6 +46,14 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
       console.error('Erro ao carregar contas:', error);
       setContas([]);
     }
+  };
+
+  const carregarSalasDisponiveis = () => {
+    // Simular carregamento de salas disponíveis
+    const salasDisponiveis = SALAS.filter(sala => 
+      !contas.some(conta => conta.salaId === sala.id)
+    );
+    setSalasDisponiveis(salasDisponiveis);
   };
 
   const handleLogin = async () => {
@@ -154,6 +164,32 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
     }
   };
 
+  const handleCriarAviso = () => {
+    if (!novoAviso.titulo.trim() || !novoAviso.mensagem.trim()) {
+      Alert.alert('Erro', 'Preencha título e mensagem do aviso');
+      return;
+    }
+
+    const avisoCriado = {
+      id: Date.now(),
+      titulo: novoAviso.titulo,
+      mensagem: novoAviso.mensagem,
+      tempo: 'agora',
+      tipo: novoAviso.tipo,
+      lida: false
+    };
+
+    setAvisos([avisoCriado, ...avisos]);
+    setNovoAviso({ titulo: '', mensagem: '', tipo: 'aviso' });
+    setMostrarFormAviso(false);
+  };
+
+  const marcarComoLido = (id) => {
+    setAvisos(avisos.map(aviso => 
+      aviso.id === id ? { ...aviso, lida: true } : aviso
+    ));
+  };
+
   const renderTelaInicial = () => (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
@@ -172,7 +208,6 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
         <TouchableOpacity 
           style={styles.loginButton}
           onPress={() => setLoginType('aluno')}
-          activeOpacity={0.8}
         >
           <View style={styles.buttonContent}>
             <Text style={styles.buttonIcon}>👨‍🎓</Text>
@@ -183,7 +218,6 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
         <TouchableOpacity 
           style={styles.loginButton}
           onPress={() => setLoginType('diretora')}
-          activeOpacity={0.8}
         >
           <View style={styles.buttonContent}>
             <Text style={styles.buttonIcon}>👩‍🏫</Text>
@@ -212,9 +246,9 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
 
       <View style={styles.formContainer}>
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Sala</Text>
+          <Text style={styles.inputLabel}>Salas Disponíveis</Text>
           <View style={styles.salaContainer}>
-            {SALAS.map((sala) => (
+            {salasDisponiveis.map((sala) => (
               <TouchableOpacity
                 key={sala.id}
                 style={[
@@ -298,177 +332,182 @@ export default function ProfessionalLoginScreen({ onLogin, onBack }) {
           <Text style={styles.smallLogoText}>S</Text>
         </View>
         <Text style={styles.loginTitle}>Acesso da Diretora</Text>
-        <Text style={styles.loginSubtitle}>Painel Administrativo</Text>
+        <Text style={styles.loginSubtitle}>Entre com suas credenciais</Text>
       </View>
 
-      <View style={styles.modeButtons}>
-        <TouchableOpacity 
-          style={[styles.modeButton, modo === 'login' && styles.modeButtonActive]}
-          onPress={() => setModo('login')}
-        >
-          <Text style={[styles.modeButtonText, modo === 'login' && styles.modeButtonTextActive]}>
-            🔐 Login
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.formContainer}>
+        <View style={styles.modeButtons}>
+          <TouchableOpacity 
+            style={[styles.modeButton, modo === 'login' && styles.modeButtonActive]}
+            onPress={() => setModo('login')}
+          >
+            <Text style={[styles.modeButtonText, modo === 'login' && styles.modeButtonTextActive]}>
+              🔐 Login
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.modeButton, modo === 'criar' && styles.modeButtonActive]}
-          onPress={() => setModo('criar')}
-        >
-          <Text style={[styles.modeButtonText, modo === 'criar' && styles.modeButtonTextActive]}>
-            ➕ Criar Conta
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.modeButton, modo === 'criar' && styles.modeButtonActive]}
+            onPress={() => setModo('criar')}
+          >
+            <Text style={[styles.modeButtonText, modo === 'criar' && styles.modeButtonTextActive]}>
+              ➕ Criar Conta
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.modeButton, modo === 'gerenciar' && styles.modeButtonActive]}
-          onPress={() => setModo('gerenciar')}
-        >
-          <Text style={[styles.modeButtonText, modo === 'gerenciar' && styles.modeButtonTextActive]}>
-            👥 Gerenciar
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity 
+            style={[styles.modeButton, modo === 'gerenciar' && styles.modeButtonActive]}
+            onPress={() => setModo('gerenciar')}
+          >
+            <Text style={[styles.modeButtonText, modo === 'gerenciar' && styles.modeButtonTextActive]}>
+              👥 Gerenciar Contas
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
-        {modo === 'login' && (
-          <View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Usuário</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Digite seu usuário"
-                value={usuario}
-                onChangeText={setUsuario}
-                placeholderTextColor={COLORS.lighter}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Senha</Text>
-              <View style={styles.passwordContainer}>
+        <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
+          {modo === 'login' && (
+            <View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Usuário</Text>
                 <TextInput
-                  style={[styles.input, styles.passwordInput]}
-                  placeholder="Digite sua senha"
-                  value={senha}
-                  onChangeText={setSenha}
+                  style={styles.input}
+                  placeholder="Digite seu usuário"
+                  value={usuario}
+                  onChangeText={setUsuario}
                   placeholderTextColor={COLORS.lighter}
-                  secureTextEntry={!mostrarSenha}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
-                <TouchableOpacity 
-                  style={styles.showPasswordButton}
-                  onPress={() => setMostrarSenha(!mostrarSenha)}
-                >
-                  <Text style={styles.showPasswordText}>{mostrarSenha ? '👁️' : '👁️‍🗨️'}</Text>
-                </TouchableOpacity>
               </View>
-            </View>
 
-            <TouchableOpacity 
-              style={[styles.submitButton, usuario && senha && styles.submitButtonActive]}
-              onPress={handleDiretoraLogin}
-              disabled={!usuario || !senha || carregando}
-            >
-              <Text style={styles.submitButtonText}>
-                {carregando ? '🔄 Entrando...' : '🚀 Acessar'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {modo === 'criar' && (
-          <View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Nome Completo</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Digite seu nome completo"
-                value={nome}
-                onChangeText={setNome}
-                placeholderTextColor={COLORS.lighter}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Usuário</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Mínimo 3 caracteres"
-                value={usuario}
-                onChangeText={setUsuario}
-                placeholderTextColor={COLORS.lighter}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Senha</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Mínimo 6 caracteres"
-                value={senha}
-                onChangeText={setSenha}
-                placeholderTextColor={COLORS.lighter}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Confirmar Senha</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Repita a senha"
-                value={confirmSenha}
-                onChangeText={setConfirmSenha}
-                placeholderTextColor={COLORS.lighter}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <TouchableOpacity onPress={handleCriarConta}>
-              <Text style={styles.createAccountButton}>➕ Criar Conta</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {modo === 'gerenciar' && (
-          <View>
-            <Text style={styles.accountsTitle}>Contas Cadastradas</Text>
-            
-            {contas.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>Nenhuma conta encontrada</Text>
-                <Text style={styles.emptyStateSubtext}>Crie contas para começar</Text>
-              </View>
-            ) : (
-              contas.map((conta) => (
-                <View key={conta.id} style={styles.accountCard}>
-                  <View style={styles.accountAvatar}>
-                    <Text style={styles.avatarText}>{conta.nome.charAt(0).toUpperCase()}</Text>
-                  </View>
-                  <View style={styles.accountInfo}>
-                    <Text style={styles.accountName}>{conta.nome}</Text>
-                    <Text style={styles.accountDetails}>@{conta.usuario} • {conta.role}</Text>
-                  </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Senha</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.input, styles.passwordInput]}
+                    placeholder="Digite sua senha"
+                    value={senha}
+                    onChangeText={setSenha}
+                    placeholderTextColor={COLORS.lighter}
+                    secureTextEntry={!mostrarSenha}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <TouchableOpacity 
+                    style={styles.passwordToggle}
+                    onPress={() => setMostrarSenha(!mostrarSenha)}
+                  >
+                    <View style={styles.passwordToggleIcon}>
+                      <View style={[styles.passwordToggleLine, !mostrarSenha && styles.passwordToggleLineActive]} />
+                      <View style={[styles.passwordToggleCircle, !mostrarSenha && styles.passwordToggleCircleActive]} />
+                    </View>
+                  </TouchableOpacity>
                 </View>
-              ))
-            )}
-          </View>
-        )}
+              </View>
+
+              <TouchableOpacity 
+                style={[styles.submitButton, usuario && senha && styles.submitButtonActive]}
+                onPress={handleDiretoraLogin}
+                disabled={!usuario || !senha || carregando}
+              >
+                <Text style={styles.submitButtonText}>
+                  {carregando ? '🔄 Entrando...' : '🚀 Acessar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {modo === 'criar' && (
+            <View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nome Completo</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Digite seu nome completo"
+                  value={nome}
+                  onChangeText={setNome}
+                  placeholderTextColor={COLORS.lighter}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Usuário</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mínimo 3 caracteres"
+                  value={usuario}
+                  onChangeText={setUsuario}
+                  placeholderTextColor={COLORS.lighter}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Senha</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mínimo 6 caracteres"
+                  value={senha}
+                  onChangeText={setSenha}
+                  placeholderTextColor={COLORS.lighter}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Confirmar Senha</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Repita a senha"
+                  value={confirmSenha}
+                  onChangeText={setConfirmSenha}
+                  placeholderTextColor={COLORS.lighter}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <TouchableOpacity onPress={handleCriarConta}>
+                <Text style={styles.createAccountButton}>➕ Criar Conta</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {modo === 'gerenciar' && (
+            <View>
+              <Text style={styles.accountsTitle}>Contas Cadastradas</Text>
+              
+              {contas.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>Nenhuma conta encontrada</Text>
+                  <Text style={styles.emptyStateSubtext}>Crie contas para começar</Text>
+                </View>
+              ) : (
+                contas.map((conta) => (
+                  <View key={conta.id} style={styles.accountCard}>
+                    <View style={styles.accountAvatar}>
+                      <Text style={styles.avatarText}>{conta.nome.charAt(0).toUpperCase()}</Text>
+                    </View>
+                    <View style={styles.accountInfo}>
+                      <Text style={styles.accountName}>{conta.nome}</Text>
+                      <Text style={styles.accountDetails}>@{conta.usuario} • {conta.role}</Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          )}
+        </ScrollView>
 
         <TouchableOpacity onPress={() => setLoginType(null)}>
           <Text style={styles.backLink}>← Voltar</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </View>
   );
 
@@ -684,15 +723,6 @@ const styles = StyleSheet.create({
   },
   passwordInput: {
     paddingRight: 50,
-  },
-  showPasswordButton: {
-    position: 'absolute',
-    right: 16,
-    top: 18,
-    padding: 8,
-  },
-  showPasswordText: {
-    fontSize: 20,
   },
   salaContainer: {
     marginBottom: 20,

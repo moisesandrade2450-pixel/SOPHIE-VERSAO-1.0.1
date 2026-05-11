@@ -6,7 +6,7 @@ import { accountManager, validarUsuario, validarSenha, validarNome } from './acc
 const { width, height } = Dimensions.get('window');
 
 export default function UnifiedLoginScreen({ onLogin, onBack }) {
-  const [loginType, setLoginType] = useState(null); // 'aluno', 'diretora', 'admin'
+  const [loginType, setLoginType] = useState(null); // 'aluno', 'diretora'
   const [modo, setModo] = useState('login'); // 'login', 'criar', 'gerenciar'
   const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState('');
@@ -177,12 +177,6 @@ export default function UnifiedLoginScreen({ onLogin, onBack }) {
           <Text style={styles.loginButtonText}>👩‍🏫 Diretora</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.loginButton, styles.adminButton]}
-          onPress={() => setLoginType('admin')}
-        >
-          <Text style={styles.loginButtonText}>⚙️ Administração</Text>
-        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
@@ -399,64 +393,7 @@ export default function UnifiedLoginScreen({ onLogin, onBack }) {
     </ScrollView>
   );
 
-  const renderLoginAdmin = () => (
-    <ScrollView style={styles.loginContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.loginHeader}>
-        <Image 
-          source={require('./assets/icon.png')} 
-          style={styles.loginLogo}
-          resizeMode="contain"
-        />
-        <Text style={styles.loginTitle}>Painel Administrativo</Text>
-        <Text style={styles.loginSubtitle}>Acesso Restrito</Text>
-      </View>
-
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Usuário Administrador"
-          value={usuario}
-          onChangeText={setUsuario}
-          placeholderTextColor={COLORS.lighter}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Senha Administrador"
-          value={senha}
-          onChangeText={setSenha}
-          placeholderTextColor={COLORS.lighter}
-          secureTextEntry={!mostrarSenha}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        <TouchableOpacity 
-          style={styles.showPasswordButton}
-          onPress={() => setMostrarSenha(!mostrarSenha)}
-        >
-          <Text style={styles.showPasswordText}>{mostrarSenha ? '👁️' : '👁️‍🗨️'}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.loginSubmitButton, usuario && senha && styles.loginSubmitButtonActive]}
-          onPress={handleAdminLogin}
-          disabled={!usuario || !senha || carregando}
-        >
-          <Text style={styles.loginSubmitButtonText}>
-            {carregando ? '🔄 Autenticando...' : '🔐 Acessar Painel'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity onPress={() => setLoginType(null)}>
-        <Text style={styles.backLink}>← Voltar</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
-
+  
   if (!loginType) {
     return renderTelaInicial();
   }
@@ -469,10 +406,7 @@ export default function UnifiedLoginScreen({ onLogin, onBack }) {
     return renderLoginDiretora();
   }
 
-  if (loginType === 'admin') {
-    return renderLoginAdmin();
   }
-}
 
 const styles = StyleSheet.create({
   container: {

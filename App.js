@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import UnifiedLoginScreen from './UnifiedLoginScreen';
 import DiretoraTela from './DiretoraTela';
 import SalaTela from './SalaTela';
-import AdminPanelScreen from './AdminPanelScreen';
 import { COLORS } from './constants';
 
 // Capturar erros globais
@@ -111,9 +110,7 @@ export default function App() {
   // Usuário logado - mostrar interface específica
   return (
     <View style={styles.container}>
-      {userType === 'admin' ? (
-        <AdminPanelScreen adminUser={user} onLogout={handleLogout} />
-      ) : userType === 'diretora' ? (
+      {userType === 'diretora' ? (
         <DiretoraTela user={user} onLogout={handleLogout} />
       ) : (
         <SalaTela user={user} onLogout={handleLogout} />

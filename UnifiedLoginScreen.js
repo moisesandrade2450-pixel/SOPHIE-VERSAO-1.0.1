@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, Image, Dimensions, Animated } from 'react-native';
 import { COLORS, SALAS, CURSOS } from './constants';
 import { accountManager, validarUsuario, validarSenha, validarNome } from './accountManager';
-import { adminAuth, validarUsuarioAdmin, validarSenhaAdmin } from './adminAuth';
 
 const { width, height } = Dimensions.get('window');
 

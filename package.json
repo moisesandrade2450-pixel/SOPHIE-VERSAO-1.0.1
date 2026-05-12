@@ -12,6 +12,7 @@
     "web:8082": "expo start --web --port 8082",
     "web:8083": "expo start --web --port 8083",
     "web:clean": "npx expo start --web --port 8080 --clear --reset-cache",
+    "web:hot": "npx expo start --web --port 19006 --clear",
     "server": "node server.js",
     "server:3001": "node server.js --port 3001",
     "server:8081": "node server.js --port 8081"

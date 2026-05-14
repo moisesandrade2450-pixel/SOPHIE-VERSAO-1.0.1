@@ -215,7 +215,7 @@ export default function SalaTela({ user, onLogout }) {
                 </Text>
                 {item.mensagem && (
                   <View style={styles.avisoMensagemContainer}>
-                    <Text style={styles.avisoMensagem}>💬 "{item.mensagem}"</Text>
+                    <Text style={styles.avisoMensagem}>💬 &quot;{item.mensagem}&quot;</Text>
                   </View>
                 )}
                 <TouchableOpacity
@@ -257,7 +257,7 @@ export default function SalaTela({ user, onLogout }) {
                 </View>
                 <Text style={styles.historicoRemetente}>De: {item.remetente}</Text>
                 {item.mensagem && (
-                  <Text style={styles.historicoMensagem}>💬 "{item.mensagem}"</Text>
+                  <Text style={styles.historicoMensagem}>💬 &quot;{item.mensagem}&quot;</Text>
                 )}
                 <Text style={styles.historicoStatus}>
                   {item.lido ? '✅ Lida' : '🔴 Não lida'}

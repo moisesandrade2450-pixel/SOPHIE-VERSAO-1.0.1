@@ -27,11 +27,6 @@ export const CURSOS = [
   'Massoterapia'
 ];
 
-export const CONTAS_DIRETOR = [
-  { usuario: 'diretora', senha: '123456', nome: 'Diretora Maria Silva', role: 'diretora' },
-  { usuario: 'admin', senha: 'admin123', nome: 'Administrador', role: 'diretora' }
-];
-
 export const COLORS = {
   primary: '#9C27B0',      // roxo escuro
   secondary: '#BA68C8',    // roxo médio

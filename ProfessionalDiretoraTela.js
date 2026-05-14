@@ -1,14 +1,18 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Dimensions, Animated, StatusBar, FlatList } from 'react-native';
-import { COLORS } from './constants';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Animated, StatusBar, FlatList, Alert, TextInput } from 'react-native';
+import { COLORS, SALAS } from './constants';
+import { realtimeService } from './realtimeService';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default function ProfessionalDiretoraTela({ user, onLogout }) {
   const [avisos, setAvisos] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [mostrarFormAviso, setMostrarFormAviso] = useState(false);
   const [novoAviso, setNovoAviso] = useState({ titulo: '', mensagem: '', tipo: 'aviso' });
+  const [selectedRoomId, setSelectedRoomId] = useState(SALAS[0]?.id || 'sala1');
+  const [connectionStatus, setConnectionStatus] = useState(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -49,6 +53,29 @@ export default function ProfessionalDiretoraTela({ user, onLogout }) {
       ]);
       setCarregando(false);
     }, 1500);
+
+    const initializeRealtime = async () => {
+      try {
+        await realtimeService.initialize({
+          userId: user.usuario,
+          userName: user.nome,
+          userRole: user.role,
+        });
+        realtimeService.on('connection', setConnectionStatus);
+        realtimeService.on('error', (error) => {
+          Alert.alert('Erro de conexão', error.message || 'Falha no realtime');
+        });
+      } catch (error) {
+        console.warn('Erro ao inicializar realtime:', error);
+      }
+    };
+
+    initializeRealtime();
+
+    return () => {
+      realtimeService.off('connection', setConnectionStatus);
+      realtimeService.disconnect();
+    };
   }, []);
 
   const handleLogout = () => {
@@ -62,7 +89,7 @@ export default function ProfessionalDiretoraTela({ user, onLogout }) {
     );
   };
 
-  const handleCriarAviso = () => {
+  const handleCriarAviso = async () => {
     if (!novoAviso.titulo.trim() || !novoAviso.mensagem.trim()) {
       Alert.alert('Erro', 'Preencha título e mensagem do aviso');
       return;
@@ -74,12 +101,25 @@ export default function ProfessionalDiretoraTela({ user, onLogout }) {
       mensagem: novoAviso.mensagem,
       tempo: 'agora',
       tipo: novoAviso.tipo,
-      lida: false
+      salaId: selectedRoomId,
+      lida: false,
     };
 
     setAvisos([avisoCriado, ...avisos]);
     setNovoAviso({ titulo: '', mensagem: '', tipo: 'aviso' });
     setMostrarFormAviso(false);
+
+    try {
+      await realtimeService.sendAnnouncement(novoAviso.mensagem, 'high', [selectedRoomId], {
+        title: novoAviso.titulo,
+        userName: user.nome,
+        userRole: user.role,
+        roomId: selectedRoomId,
+      });
+    } catch (error) {
+      console.warn('Falha ao enviar aviso:', error);
+      Alert.alert('Erro', 'Não foi possível enviar o aviso em tempo real');
+    }
   };
 
   const renderAviso = ({ item }) => (
@@ -113,7 +153,12 @@ export default function ProfessionalDiretoraTela({ user, onLogout }) {
           </View>
           <View style={styles.userDetails}>
             <Text style={styles.userName}>{user.nome}</Text>
-            <Text style={styles.userRole}>Diretora</Text>
+            <Text style={styles.userRole}>{user.role === 'diretora' ? 'Diretora' : 'Professor'}</Text>
+            <Text style={styles.connectionText}>
+              {connectionStatus?.type === 'connected'
+                ? `Conectado via ${connectionStatus.method}`
+                : 'Conectando...'}
+            </Text>
           </View>
         </View>
         
@@ -182,6 +227,35 @@ export default function ProfessionalDiretoraTela({ user, onLogout }) {
                   multiline
                   numberOfLines={4}
                 />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Sala destinatária</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.salaSelector}
+                >
+                  {SALAS.map((sala) => (
+                    <TouchableOpacity
+                      key={sala.id}
+                      style={[
+                        styles.roomOption,
+                        selectedRoomId === sala.id && styles.roomOptionActive,
+                      ]}
+                      onPress={() => setSelectedRoomId(sala.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.roomOptionText,
+                          selectedRoomId === sala.id && styles.roomOptionTextActive,
+                        ]}
+                      >
+                        {sala.id.replace('sala', 'Sala ')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
 
               <View style={styles.inputGroup}>
@@ -281,6 +355,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     overflow: 'hidden',
+  },
+  connectionText: {
+    fontSize: 12,
+    color: COLORS.white,
+    marginTop: 6,
   },
   logoutButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',

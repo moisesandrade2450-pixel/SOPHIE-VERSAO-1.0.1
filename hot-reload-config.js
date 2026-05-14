@@ -17,7 +17,7 @@ module.exports = {
     /build/
   ],
   // Porta fixa para evitar conflitos
-  port: 19006,
+  port: 3000,
   // Ambiente de desenvolvimento
   mode: 'development'
 };

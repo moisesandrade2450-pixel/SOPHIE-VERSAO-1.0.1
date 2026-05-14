@@ -3,32 +3,38 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "expo start --port 8082",
-    "android": "expo start --port 8082 --android",
-    "ios": "expo start --port 8082 --ios",
-    "web": "expo start --web --port 8080",
-    "web:3000": "expo start --web --port 3000",
-    "web:8081": "expo start --web --port 8081",
-    "web:8082": "expo start --web --port 8082",
-    "web:8083": "expo start --web --port 8083",
-    "web:clean": "npx expo start --web --port 8080 --clear --reset-cache",
-    "web:hot": "npx expo start --web --port 19006 --clear",
-    "server": "node server.js",
-    "server:3001": "node server.js --port 3001",
-    "server:8081": "node server.js --port 8081"
+    "start": "expo start --port 3000",
+    "android": "expo start --port 3000 --android",
+    "ios": "expo start --port 3000 --ios",
+    "web": "expo start --web --port 3000",
+    "web:clean": "npx expo start --web --port 3000 --clear --reset-cache",
+    "web:hot": "npx expo start --web --port 3000 --clear",
+    "server": "node server-realtime.js",
+    "server:realtime": "node server-realtime.js",
+    "start:realtime": "start-realtime-server.bat",
+    "test:audio": "node -e \"require('./AudioTestComponent.js')\""
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "cors": "^2.8.5",
     "expo": "~54.0.33",
     "expo-audio": "~1.1.1",
     "expo-speech": "~14.0.8",
     "expo-status-bar": "~3.0.9",
+    "express-rate-limit": "^7.1.5",
     "firebase": "^12.12.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-svg": "^15.12.1",
     "react-native-web": "^0.21.0",
-    "express-rate-limit": "^7.1.5"
+    "ws": "^8.18.0"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^17.6.0"
+  }
 }

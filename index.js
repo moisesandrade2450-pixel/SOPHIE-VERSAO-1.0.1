@@ -1,8 +1,8 @@
 import { registerRootComponent } from 'expo';
 
-import RobustApp from './RobustApp';
+import App from './App';
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => RobustApp);
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,
 // environment is set up appropriately
-registerRootComponent(RobustApp);
+registerRootComponent(App);

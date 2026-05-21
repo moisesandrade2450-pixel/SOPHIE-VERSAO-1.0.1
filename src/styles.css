@@ -1,0 +1,152 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * SOPHIE — Sistema escolar de avisos
+ * Paleta: roxo escuro #9C27B0, lilás #BA68C8, branco
+ */
+
+@theme inline {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* SOPHIE brand */
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-light: var(--brand-light);
+  --color-surface: var(--surface);
+}
+
+:root {
+  --radius: 1rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.32 0.18 320); /* deep purple ink */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.32 0.18 320);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.32 0.18 320);
+
+  --primary: oklch(0.5 0.21 322); /* #9C27B0 deep purple */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.97 0.01 320);
+  --secondary-foreground: oklch(0.32 0.18 320);
+  --muted: oklch(0.97 0.005 300);
+  --muted-foreground: oklch(0.55 0.04 320);
+  --accent: oklch(0.7 0.16 322); /* #BA68C8 lilac */
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.6 0.24 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.93 0.01 320);
+  --input: oklch(0.93 0.01 320);
+  --ring: oklch(0.5 0.21 322);
+
+  /* SOPHIE brand tokens */
+  --brand-deep: oklch(0.5 0.21 322);
+  --brand-light: oklch(0.7 0.16 322);
+  --surface: oklch(0.985 0.005 320);
+
+  --chart-1: oklch(0.5 0.21 322);
+  --chart-2: oklch(0.7 0.16 322);
+  --chart-3: oklch(0.55 0.18 290);
+  --chart-4: oklch(0.65 0.14 340);
+  --chart-5: oklch(0.45 0.2 305);
+
+  --sidebar: oklch(0.985 0.005 320);
+  --sidebar-foreground: oklch(0.32 0.18 320);
+  --sidebar-primary: oklch(0.5 0.21 322);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.7 0.16 322);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.93 0.01 320);
+  --sidebar-ring: oklch(0.5 0.21 322);
+}
+
+@keyframes sophieSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sophiePulseBorder {
+  0%,
+  100% {
+    border-color: var(--brand-deep);
+  }
+  50% {
+    border-color: var(--brand-light);
+  }
+}
+
+@keyframes sophieBlob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 40px) scale(0.95);
+  }
+}
+
+@layer utilities {
+  .animate-slide-up {
+    animation: sophieSlideUp 0.6s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+  .alert-pulse {
+    animation: sophiePulseBorder 2s infinite ease-in-out;
+  }
+  .animate-blob {
+    animation: sophieBlob 14s ease-in-out infinite;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}

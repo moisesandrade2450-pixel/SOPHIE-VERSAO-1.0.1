@@ -1,0 +1,16 @@
+#pragma once
+
+// Copie este arquivo para config.h e preencha (não commite config.h com senhas).
+
+#define WIFI_SSID "NOME_DA_REDE_ESCOLA"
+#define WIFI_PASSWORD "SENHA_DA_REDE"
+
+// Mesmos valores do .env do projeto (VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY)
+#define SUPABASE_URL "https://SEU_PROJETO.supabase.co"
+#define SUPABASE_ANON_KEY "SUA_CHAVE_ANON_PUBLICA"
+
+// Sala deste terminal (1 a 12)
+#define SALA_ID 1
+
+// Pino do buzzer (ou sinal para módulo PAM8403)
+#define BUZZER_PIN 25

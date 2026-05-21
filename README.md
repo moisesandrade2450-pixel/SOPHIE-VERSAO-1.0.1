@@ -1,94 +1,173 @@
-# SOPHIE - Sistema de Avisos para Salas de Aula
+# SOPHIE — Sistema de Avisos para Salas
 
-## 🎯 Visão do Projeto
-SOPHIE é um sistema escolar de avisos em tempo real, pensado para:
-- abrir uma sala diretamente sem formulário de login
-- permitir que a gestão acesse apenas com conta escolar
-- enviar avisos direcionados para salas específicas
-- entregar som e voz para os alunos da sala
+Sistema escolar web de avisos em tempo real, com terminais por sala e painel de gestão protegido por conta.
 
-## 🧭 Fluxo Atual
-### Tela inicial
-- mostra o nome do site: **SOPHIE**
-- oferece duas opções: **Acessar Salas** e **Gestão Escolar**
-- a área de salas abre diretamente sem login
-- a área de gestão requer conta de **professor** ou **diretora**
+## ✨ Funcionalidades
 
-### Salas
-- o usuário escolhe a sala desejada
-- a sala abre e permanece aberta
-- não há login na parte de salas
+- 🏫 **12 salas** organizadas em 4 cursos com **cores próprias**:
+  - 🔵 Administração (azul)
+  - 🟣 Desenvolvimento de Sistemas (roxo)
+  - 🔴 Edificações (vermelho)
+  - 🟢 Massoterapia (verde)
+- 📺 **Terminal de sala** otimizado para projeção (tela cheia, alto contraste)
+- 🔔 **Som + voz sintetizada** ao receber novos avisos (Web Audio + SpeechSynthesis)
+- 🔐 **Gestão escolar** com login/cadastro por perfil (professor / diretora)
+- ⚡ **Tempo real** via Lovable Cloud (Supabase Realtime)
+- 🎯 Avisos direcionados: sala única, curso inteiro ou todas as salas
 
-### Gestão
-- primeiro escolhe o perfil: **Professor** ou **Diretora**
-- depois faz login com conta escolar
-- após autenticar, pode enviar avisos para salas específicas
+## 🚀 Rodando no VS Code
 
-## 🏫 Salas já configuradas
-As 12 salas do projeto estão em `constants.js`:
-- Sala 1, Sala 2, Sala 3 → Administração
-- Sala 4, Sala 5, Sala 6 → Desenvolvimento de Sistemas
-- Sala 7, Sala 8, Sala 9 → Edificações
-- Sala 10, Sala 11, Sala 12 → Massoterapia
+### Pré-requisitos
 
-## 🔧 Arquivos principais usados
-- `App.js` — ponto de entrada do app
-- `SimpleApp.js` — menu inicial, seleção de salas e fluxo de gestão
-- `AlunoSalaTela.js` — tela da sala que mostra avisos
-- `ProfessionalDiretoraTela.js` — painel da gestão para enviar avisos
-- `constants.js` — definição de salas e cores
-- `audioService.js` — som e síntese de voz
-- `realtimeService.js` — comunicação em tempo real
-- `server-realtime.js` — servidor WebSocket/API
+- [Node.js 20+](https://nodejs.org/) ou [Bun](https://bun.sh/) (recomendado)
+- VS Code com as extensões: **ESLint**, **Tailwind CSS IntelliSense**, **TypeScript**
 
-## 🚀 Como rodar
+### Passo a passo
+
 ```bash
-npm install
-npm run web
+# 1. Instalar dependências
+bun install
+# (ou) npm install
+
+# 2. Rodar em modo desenvolvimento
+bun dev
+# (ou) npm run dev
+
+# 3. Abrir no navegador
+# http://localhost:8080
 ```
 
-## 📌 Observações
-- Não há login para acessar as salas.
-- A gestão só entra via login escolar.
-- A diretora/professor envia aviso para sala selecionada.
-- O aviso deve chegar à sala com som e fala.
+O `.env` já vem preenchido com as credenciais do Lovable Cloud — nada a configurar.
 
-## 🎨 Paleta de cores
-- Roxo escuro: `#9C27B0`
-- Lilás: `#BA68C8`
-- Branco: `#FFFFFF`
+### Dois computadores na mesma rede (telão + gestão)
 
-## 📂 Estrutura relevante do projeto
+O `npm run dev` já sobe com `--host` (aceita outros PCs na rede).
+
+1. **No PC que roda o projeto** (deixe o terminal aberto com `npm run dev`).
+2. No terminal, copie o endereço **Network** (ex.: `http://192.168.40.129:8080/`) — **não use `localhost` no outro PC**.
+3. Os dois PCs precisam estar no **mesmo Wi‑Fi** (ou mesma rede cabeada).
+4. Se não abrir no outro PC, permita a porta no Firewall do Windows (8080 ou 8081).
+
+| Computador      | Abrir no navegador                   |
+| --------------- | ------------------------------------ |
+| Gestão / início | `http://IP_DO_PC:8080/` ou `/gestao` |
+| Telão da sala 3 | `http://IP_DO_PC:8080/salas/3`       |
+| Lista de salas  | `http://IP_DO_PC:8080/salas`         |
+
+Substitua `IP_DO_PC` pelo IPv4 da máquina que está com `npm run dev` (ex. `192.168.40.129`).
+
+**Erro comum:** no 2º computador usar `localhost` — isso aponta para o próprio PC, não para o servidor.
+
+## 📁 Estrutura
+
 ```
-PROJETOSOPHIE/
-├── App.js
-├── SimpleApp.js
-├── AlunoSalaTela.js
-├── ProfessionalDiretoraTela.js
-├── constants.js
-├── audioService.js
-├── realtimeService.js
-├── server-realtime.js
-└── README.md
+src/
+├── routes/
+│   ├── index.tsx              # Tela inicial
+│   ├── salas.tsx              # Grade de 12 salas
+│   ├── salas_.$salaId.tsx     # Terminal de uma sala (tela do telão)
+│   ├── gestao.tsx             # Login / cadastro (professor / diretora)
+│   └── gestao_.painel.tsx     # Painel para enviar avisos
+├── lib/
+│   ├── salas.ts               # Dados das 12 salas + cores por curso
+│   ├── audio.ts               # Chime + síntese de voz (navegador)
+│   └── gestao-auth.ts         # Login, cadastro e perfis
+├── components/
+│   └── SophieNav.tsx
+├── integrations/supabase/
+└── styles.css
+
+hardware/esp32-sala/           # Firmware opcional da caixinha (ESP32)
+docs/caixinha-esp32.md         # Guia completo: telão + caixinha sem BT no PC
+
+supabase/migrations/
 ```
 
-## 💡 Resumo das alterações feitas
-- menu inicial reorganizado para **Salas** e **Gestão**
-- sala abre direto sem etapa de login
-- gestão exige seleção de perfil e credenciais
-- tela de ajuda/credenciais de teste removida do início
-- README atualizado para a ideia real do projeto
+## 🗄️ Banco de dados
 
-## ✅ Status atual
-O projeto agora está alinhado com a ideia: menu inicial limpo, seleção de sala direta e área de gestão protegida.
+Duas tabelas principais (criadas automaticamente):
 
-## 📱 Próximos passos
-1. Expandir para 12 salas
-2. Adicionar LED físico (Arduino/GPIO)
-3. Adicionar autenticação segura
-4. Banco de dados com histórico
-5. Relatórios de avisos
+- **`avisos`** — `sala_id`, `titulo`, `mensagem`, `enviado_por`, `created_at`
+- **`user_roles`** — vincula cada usuário a um perfil (`professor` ou `diretora`)
+
+Regras de segurança (RLS) ativas:
+
+- Qualquer um pode **ler** avisos (necessário para os terminais)
+- Apenas usuários autenticados com perfil `professor` ou `diretora` podem **inserir** avisos
+
+## 👥 Como criar conta de gestão
+
+1. Acesse `/gestao`
+2. Escolha o perfil (**Professor** ou **Diretora**)
+3. Clique em **Criar conta**, informe email e senha
+4. Login automático — sem necessidade de confirmar email
+5. Redireciona para `/gestao/painel` para enviar avisos
+
+### ⚠️ Erro ao enviar aviso (“sem permissão” / não reconhece diretora)
+
+O banco usa uma regra que estava bloqueando o envio. **Rode uma vez** o SQL em `supabase/FIX-ENVIAR-AVISOS.sql`:
+
+1. Abra [Supabase Dashboard](https://supabase.com/dashboard) → projeto do SOPHIE → **SQL Editor**
+2. Cole o conteúdo de `supabase/FIX-ENVIAR-AVISOS.sql` e clique **Run**
+3. Saia do painel (`Sair`) e entre de novo em `/gestao`
+
+## 📡 Como funcionam os avisos em tempo real
+
+```
+Gestão envia aviso → INSERT em `avisos` → Supabase Realtime
+   → Terminal da sala recebe → Toca chime → Fala via TTS → Exibe na tela
+```
+
+A primeira vez que abrir o terminal, o navegador exige clique em **"Ativar som e voz"** (política de autoplay).
+
+## 🔒 Quem pode fazer o quê (segurança)
+
+| Página                       | Login?                      | O que faz                             |
+| ---------------------------- | --------------------------- | ------------------------------------- |
+| `/gestao` e `/gestao/painel` | Sim (professor ou diretora) | **Criar conta** e **enviar** avisos   |
+| `/salas` e `/salas/XX`       | Não (público)               | **Só ver e ouvir** avisos já enviados |
+
+Um aluno que abrir o terminal da sala **não envia** comunicados — o mesmo vale para a caixinha ESP32, que só **lê** o banco (chave pública, sem permissão de escrita).
+
+## 🔊 Telão + caixinha (sem Bluetooth no PC)
+
+Cenário pedido pela escola:
+
+- **Telão:** navegador em `/salas/XX` (imagem do aviso).
+- **Caixinha:** aparelho à parte (ESP32 + alto-falante), Wi‑Fi da escola, **sem** parear Bluetooth no computador do projetor.
+
+```
+Gestão (login) → Supabase → Telão (site) + Caixinha (ESP32)
+```
+
+- **Modo rápido (sem hardware):** caixinha com **cabo P2/USB** no PC; som pelo site (`audio.ts`).
+- **Modo independente (trabalho / feira):** firmware em `hardware/esp32-sala/` — guia em **[docs/caixinha-esp32.md](docs/caixinha-esp32.md)**.
+
+## 🛠️ Stack técnica
+
+- **Frontend**: React 19 + TanStack Start + TanStack Router
+- **Build**: Vite 7
+- **Estilo**: Tailwind CSS v4 (tokens em `src/styles.css`)
+- **Backend**: Lovable Cloud (Supabase: Auth + Postgres + Realtime)
+- **Linguagem**: TypeScript (strict)
+
+## 📜 Scripts
+
+```bash
+bun dev        # desenvolvimento (porta 8080)
+bun run build  # build de produção
+bun run lint   # verifica código com ESLint
+```
+
+## 🔜 Próximos passos sugeridos
+
+- [x] Documentação da caixinha ESP32 (`docs/caixinha-esp32.md`)
+- [x] Sketch de exemplo (`hardware/esp32-sala/esp32_sala.ino`)
+- [ ] LED físico na caixinha (GPIO)
+- [ ] Histórico de avisos por sala
+- [ ] Relatórios de envios
+- [ ] Agendamento de avisos
 
 ---
 
-**Status**: Em desenvolvimento | **Versão**: 1.0.0 Beta
+**Status**: Beta · **Versão**: 1.0.0

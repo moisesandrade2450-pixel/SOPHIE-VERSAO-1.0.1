@@ -72,19 +72,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SOPHIE — Avisos escolares em tempo rea." },
+      { title: "SOPHIE — Avisos escolares em tempo real." },
       {
         name: "description",
         content: "Sistema escolar de avisos em tempo real para salas de aula.",
       },
-      { property: "og:title", content: "SOPHIE — Avisos escolares em tempo rea." },
+      { property: "og:title", content: "SOPHIE — Avisos escolares em tempo real." },
       {
         property: "og:description",
         content: "Sistema escolar de avisos em tempo real para salas de aula.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "SOPHIE — Avisos escolares em tempo rea." },
+      { name: "twitter:title", content: "SOPHIE — Avisos escolares em tempo real." },
       {
         name: "twitter:description",
         content: "Sistema escolar de avisos em tempo real para salas de aula.",

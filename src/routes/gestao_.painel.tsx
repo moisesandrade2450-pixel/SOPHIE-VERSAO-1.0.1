@@ -35,6 +35,33 @@ function PainelPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
+  const criarConta = useServerFn(criarContaPeloPainel);
+  const [novoEmail, setNovoEmail] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [novoPerfil, setNovoPerfil] = useState<PerfilGestao>("professor");
+  const [criandoConta, setCriandoConta] = useState(false);
+  const [contaErro, setContaErro] = useState<string | null>(null);
+  const [contaOk, setContaOk] = useState<string | null>(null);
+
+  const submitNovaConta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setContaErro(null);
+    setContaOk(null);
+    setCriandoConta(true);
+    try {
+      await criarConta({
+        data: { email: novoEmail.trim(), senha: novaSenha, perfil: novoPerfil },
+      });
+      setContaOk(`Conta ${novoPerfil} criada para ${novoEmail.trim()}.`);
+      setNovoEmail("");
+      setNovaSenha("");
+    } catch (err) {
+      setContaErro(err instanceof Error ? err.message : "Falha ao criar conta.");
+    } finally {
+      setCriandoConta(false);
+    }
+  };
+
   useEffect(() => {
     const validarSessao = async (s: Session | null) => {
       if (!s) {

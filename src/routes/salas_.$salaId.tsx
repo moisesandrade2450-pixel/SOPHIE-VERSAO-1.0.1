@@ -125,6 +125,12 @@ function SalaPage() {
             >
               ← Salas
             </Link>
+            <Link
+              to="/gestao/painel"
+              className="text-xs font-mono uppercase tracking-widest opacity-90 hover:opacity-100 hover:underline"
+            >
+              Painel →
+            </Link>
           </div>
         </div>
 

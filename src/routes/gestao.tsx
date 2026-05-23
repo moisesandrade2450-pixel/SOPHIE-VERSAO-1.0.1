@@ -99,9 +99,6 @@ function GestaoPage() {
 
         {!perfil && (
           <div className="space-y-4 animate-slide-up">
-            <p className="text-center text-sm text-muted-foreground">
-              Passo 1 — Selecione seu perfil
-            </p>
             <div className="grid sm:grid-cols-2 gap-4">
               {PERFIS.map((p) => (
                 <button
@@ -111,7 +108,7 @@ function GestaoPage() {
                   className="p-8 border-4 border-brand-deep rounded-[1.5rem] hover:bg-brand-deep hover:text-primary-foreground transition-colors text-left"
                 >
                   <div className="text-xs font-mono uppercase tracking-widest opacity-60 mb-2">
-                    Perfil
+                    Sou
                   </div>
                   <div className="text-3xl font-black">{p.titulo}</div>
                   <p className="text-sm mt-3 opacity-80">{p.descricao}</p>

@@ -1,15 +1,16 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { SophieNav } from "@/components/SophieNav";
 import { CURSOS, SALAS, salasPorCurso } from "@/lib/salas";
 import {
   obterPerfilUsuario,
   podeEnviarAvisos,
-  traduzirErroAuth,
   type PerfilGestao,
 } from "@/lib/gestao-auth";
+import { criarContaPeloPainel } from "@/lib/gestao-admin.functions";
 
 type Destino =
   | { tipo: "todas" }
@@ -33,6 +34,33 @@ function PainelPage() {
   const [enviando, setEnviando] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+
+  const criarConta = useServerFn(criarContaPeloPainel);
+  const [novoEmail, setNovoEmail] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [novoPerfil, setNovoPerfil] = useState<PerfilGestao>("professor");
+  const [criandoConta, setCriandoConta] = useState(false);
+  const [contaErro, setContaErro] = useState<string | null>(null);
+  const [contaOk, setContaOk] = useState<string | null>(null);
+
+  const submitNovaConta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setContaErro(null);
+    setContaOk(null);
+    setCriandoConta(true);
+    try {
+      await criarConta({
+        data: { email: novoEmail.trim(), senha: novaSenha, perfil: novoPerfil },
+      });
+      setContaOk(`Conta ${novoPerfil} criada para ${novoEmail.trim()}.`);
+      setNovoEmail("");
+      setNovaSenha("");
+    } catch (err) {
+      setContaErro(err instanceof Error ? err.message : "Falha ao criar conta.");
+    } finally {
+      setCriandoConta(false);
+    }
+  };
 
   useEffect(() => {
     const validarSessao = async (s: Session | null) => {
@@ -232,6 +260,60 @@ function PainelPage() {
             </div>
           </div>
         </form>
+
+        {perfil === "diretora" && (
+          <form
+            onSubmit={submitNovaConta}
+            className="lg:col-start-2 bg-card border-2 border-brand-deep/20 p-6 md:p-8 rounded-3xl space-y-4"
+          >
+            <div>
+              <h3 className="text-lg font-black">Criar conta de gestão</h3>
+              <p className="text-xs text-muted-foreground">
+                Apenas a diretora pode criar contas de professor ou diretora.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <input
+                required
+                type="email"
+                value={novoEmail}
+                onChange={(e) => setNovoEmail(e.target.value)}
+                placeholder="email@escola.edu.br"
+                className="p-3 border-2 border-brand-deep/10 rounded-xl bg-surface focus:outline-none focus:border-brand-deep"
+              />
+              <input
+                required
+                type="password"
+                minLength={6}
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                placeholder="Senha inicial (6+)"
+                className="p-3 border-2 border-brand-deep/10 rounded-xl bg-surface focus:outline-none focus:border-brand-deep"
+              />
+            </div>
+            <div className="flex gap-2 text-xs font-mono uppercase tracking-widest">
+              {(["professor", "diretora"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setNovoPerfil(p)}
+                  className={`px-3 py-1 rounded-full ${novoPerfil === p ? "bg-brand-deep text-primary-foreground" : "text-muted-foreground border border-brand-deep/20"}`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+            {contaErro && <div className="text-sm text-destructive">{contaErro}</div>}
+            {contaOk && <div className="text-sm text-brand-deep font-medium">{contaOk}</div>}
+            <button
+              type="submit"
+              disabled={criandoConta}
+              className="px-6 py-3 bg-brand-deep text-primary-foreground font-bold rounded-full hover:bg-foreground transition-colors disabled:opacity-50 text-sm uppercase tracking-widest"
+            >
+              {criandoConta ? "Criando…" : "Criar conta"}
+            </button>
+          </form>
+        )}
       </section>
     </div>
   );

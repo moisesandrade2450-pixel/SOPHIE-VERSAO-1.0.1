@@ -145,9 +145,6 @@ function GestaoPage() {
               </button>
             </div>
 
-            <p className="text-sm text-muted-foreground border-l-4 border-brand-light pl-4">
-              Passo 2 — {modo === "cadastro" ? "Crie sua conta escolar" : "Entre com email e senha"}
-            </p>
 
             <div className="flex gap-2 text-xs font-mono uppercase tracking-widest">
               <button

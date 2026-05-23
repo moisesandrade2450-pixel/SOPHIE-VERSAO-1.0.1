@@ -1,15 +1,16 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { SophieNav } from "@/components/SophieNav";
 import { CURSOS, SALAS, salasPorCurso } from "@/lib/salas";
 import {
   obterPerfilUsuario,
   podeEnviarAvisos,
-  traduzirErroAuth,
   type PerfilGestao,
 } from "@/lib/gestao-auth";
+import { criarContaPeloPainel } from "@/lib/gestao-admin.functions";
 
 type Destino =
   | { tipo: "todas" }

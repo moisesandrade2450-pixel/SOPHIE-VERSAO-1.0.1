@@ -40,21 +40,21 @@ function SalasPage() {
                 comunicados da gestão aparecem em tempo real.
               </p>
             </div>
-            <p className="font-mono text-sm opacity-60">12 Salas Ativas</p>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/"
+                className="text-xs font-mono uppercase tracking-widest px-4 py-2 rounded-full border-2 border-brand-deep/20 hover:border-brand-deep hover:bg-brand-deep hover:text-primary-foreground transition-colors"
+              >
+                ← Início
+              </Link>
+              <Link
+                to="/gestao/painel"
+                className="text-xs font-mono uppercase tracking-widest px-4 py-2 rounded-full border-2 border-brand-deep/20 hover:border-brand-deep hover:bg-brand-deep hover:text-primary-foreground transition-colors"
+              >
+                Painel →
+              </Link>
+            </div>
           </header>
-
-          <div
-            className="mb-10 p-4 md:p-5 rounded-2xl border-2 border-dashed border-brand-light/40 bg-brand-light/5 animate-slide-up"
-            style={{ animationDelay: "80ms" }}
-          >
-            <p className="text-sm font-medium text-brand-deep">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-brand-light mr-2">
-                Como usar
-              </span>
-              1. Selecione a sala do seu curso · 2. Deixe o terminal aberto na projeção · 3. Aguarde
-              os avisos ou use &quot;Ativar som e voz&quot; na primeira vez
-            </p>
-          </div>
 
           <div className="space-y-14 md:space-y-20">
             {CURSOS.map((curso) => {

@@ -3,17 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const EMAIL_DOMAIN = "escola.edu.br";
-const emailEscola = z
-  .string()
-  .email()
-  .max(255)
-  .refine((v) => v.toLowerCase().endsWith(`@${EMAIL_DOMAIN}`), {
-    message: `O e-mail precisa terminar com @${EMAIL_DOMAIN}`,
-  });
-
 const NovaContaSchema = z.object({
-  email: emailEscola,
+  email: z.string().email().max(255),
   senha: z.string().min(6).max(72),
   perfil: z.enum(["professor", "diretora"]),
 });

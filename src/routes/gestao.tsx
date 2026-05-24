@@ -99,9 +99,7 @@ function GestaoPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-4 border-2 border-brand-deep/10 rounded-xl bg-surface focus:outline-none focus:border-brand-deep"
-              placeholder="nome@escola.edu.br"
-              pattern=".+@escola\.edu\.br$"
-              title="Use um e-mail @escola.edu.br"
+              placeholder="seu@email.com"
             />
           </div>
 

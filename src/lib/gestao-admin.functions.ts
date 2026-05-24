@@ -49,7 +49,7 @@ export const criarContaPeloPainel = createServerFn({ method: "POST" })
 /** Cria a primeira diretora (sem auth). Só funciona se ainda não existir nenhuma. */
 export const criarPrimeiraDiretora = createServerFn({ method: "POST" })
   .inputValidator((data) =>
-    z.object({ email: emailEscola, senha: z.string().min(6).max(72) }).parse(data),
+    z.object({ email: z.string().email().max(255), senha: z.string().min(6).max(72) }).parse(data),
   )
   .handler(async ({ data }) => {
     const { count, error: countErr } = await supabaseAdmin

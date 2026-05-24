@@ -71,7 +71,13 @@ function SalaPage() {
           setAviso(novo);
           if (audioReady) {
             playChime();
-            setTimeout(() => speak(`${novo.titulo}. ${novo.mensagem}`), 700);
+            setTimeout(
+              () =>
+                speak(
+                  `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${novo.titulo}. ${novo.mensagem}`,
+                ),
+              900,
+            );
           }
         },
       )

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SophieNav } from "@/components/SophieNav";
 import { entrarNaGestao, criarContaGestao } from "@/lib/gestao-auth";
+import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/gestao")({
   head: () => ({

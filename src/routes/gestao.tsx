@@ -58,6 +58,21 @@ function GestaoPage() {
     }
   };
 
+  const entrarComGoogle = async () => {
+    setErro(null);
+    setLoading(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/gestao`,
+    });
+    if (result.error) {
+      setErro(result.error instanceof Error ? result.error.message : "Falha ao entrar com Google.");
+      setLoading(false);
+      return;
+    }
+    if (result.redirected) return;
+    navigate({ to: "/gestao/painel" });
+  };
+
   return (
     <div className="min-h-screen bg-background text-brand-deep">
       <SophieNav />

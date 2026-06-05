@@ -124,6 +124,27 @@ function SalaPage() {
             </span>
           </div>
           <div className="flex items-center gap-4">
+            {!audioReady && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAudioReady(true);
+                  playChime();
+                  if (aviso) {
+                    setTimeout(
+                      () =>
+                        speak(
+                          `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${aviso.titulo}. ${aviso.mensagem}`,
+                        ),
+                      900,
+                    );
+                  }
+                }}
+                className="px-3 py-1.5 rounded-full bg-white text-brand-deep text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform"
+              >
+                🔊 Ativar som
+              </button>
+            )}
             <span className="font-mono opacity-80 text-sm">{now}</span>
             <Link
               to="/salas"
@@ -155,6 +176,25 @@ function SalaPage() {
               <p className="text-xl md:text-3xl font-medium text-brand-deep/70 max-w-3xl leading-snug">
                 {aviso.mensagem}
               </p>
+              {audioReady && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    playChime();
+                    setTimeout(
+                      () =>
+                        speak(
+                          `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${aviso.titulo}. ${aviso.mensagem}`,
+                        ),
+                      900,
+                    );
+                  }}
+                  className="mt-10 px-5 py-2 rounded-full text-white text-xs font-bold uppercase tracking-widest hover:scale-105 transition-transform"
+                  style={{ background: cor.accent }}
+                >
+                  🔁 Repetir aviso
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -172,22 +212,10 @@ function SalaPage() {
               <p className="mt-6 text-sm md:text-base text-muted-foreground max-w-md">
                 Os comunicados enviados pela gestão aparecem aqui em tempo real, com som e voz.
               </p>
-              {!audioReady && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAudioReady(true);
-                    playChime();
-                  }}
-                  className="mt-10 px-6 py-3 rounded-full text-white text-sm font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-transform shadow-lg"
-                  style={{ background: cor.accent }}
-                >
-                  Ativar som e voz
-                </button>
-              )}
             </>
           )}
         </div>
+
 
         <div className="h-2 md:h-3 w-full" style={{ background: cor.accent }} />
       </div>

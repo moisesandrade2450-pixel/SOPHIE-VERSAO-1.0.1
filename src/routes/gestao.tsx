@@ -41,11 +41,11 @@ function GestaoPage() {
     try {
       if (modo === "cadastro") {
         const c = await criarContaGestao(email.trim(), senha);
-        if (!c.ok) {
+        if (!c.ok && !c.error.toLowerCase().includes("já possui conta")) {
           setErro(c.error);
           return;
         }
-        setInfo("Conta criada. Entrando…");
+        setInfo("Entrando…");
       }
       const r = await entrarNaGestao(email.trim(), senha);
       if (!r.ok) {

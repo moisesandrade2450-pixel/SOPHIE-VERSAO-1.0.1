@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SophieNav } from "@/components/SophieNav";
-import { entrarNaGestao, criarContaGestao } from "@/lib/gestao-auth";
+import { acessarGestaoSimples } from "@/lib/gestao-auth";
 import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/gestao")({
@@ -20,12 +20,10 @@ export const Route = createFileRoute("/gestao")({
 
 function GestaoPage() {
   const navigate = useNavigate();
-  const [modo, setModo] = useState<"login" | "cadastro">("login");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -36,18 +34,9 @@ function GestaoPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro(null);
-    setInfo(null);
     setLoading(true);
     try {
-      if (modo === "cadastro") {
-        const c = await criarContaGestao(email.trim(), senha);
-        if (!c.ok && !c.error.toLowerCase().includes("já possui conta")) {
-          setErro(c.error);
-          return;
-        }
-        setInfo("Entrando…");
-      }
-      const r = await entrarNaGestao(email.trim(), senha);
+      const r = await acessarGestaoSimples(email.trim(), senha);
       if (!r.ok) {
         setErro(r.error);
         return;
@@ -82,10 +71,10 @@ function GestaoPage() {
             Gestão Escolar
           </p>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight">
-            {modo === "login" ? "Entrar" : "Criar conta"}
+            Entrar
           </h1>
           <p className="text-muted-foreground mt-3">
-            Acesso aberto à gestão escolar — professores, coordenação e direção.
+            Use uma conta existente. Se o email ainda não tiver conta, ela será criada.
           </p>
         </div>
 
@@ -124,7 +113,7 @@ function GestaoPage() {
               required
               type="password"
               minLength={6}
-              autoComplete={modo === "cadastro" ? "new-password" : "current-password"}
+              autoComplete="current-password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               className="w-full p-4 border-2 border-brand-deep/10 rounded-xl bg-surface focus:outline-none focus:border-brand-deep"
@@ -133,14 +122,13 @@ function GestaoPage() {
           </div>
 
           {erro && <div className="text-sm text-destructive font-medium">{erro}</div>}
-          {info && <div className="text-sm text-brand-deep font-medium">{info}</div>}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full px-8 py-4 bg-brand-deep text-primary-foreground font-bold rounded-full hover:bg-foreground transition-colors disabled:opacity-50 uppercase tracking-widest text-sm"
           >
-            {loading ? "Aguarde…" : modo === "login" ? "Entrar" : "Criar conta e entrar"}
+            {loading ? "Aguarde…" : "Entrar"}
           </button>
 
           <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
@@ -162,18 +150,6 @@ function GestaoPage() {
               <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C40.9 35.5 44 30.2 44 24c0-1.3-.1-2.3-.4-3.5z" />
             </svg>
             Continuar com Google
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setModo(modo === "login" ? "cadastro" : "login");
-              setErro(null);
-              setInfo(null);
-            }}
-            className="block w-full text-center text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-brand-deep"
-          >
-            {modo === "login" ? "Não tenho conta — criar →" : "← Já tenho conta, entrar"}
           </button>
 
           <Link

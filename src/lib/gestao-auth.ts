@@ -22,6 +22,45 @@ export async function entrarNaGestao(
   return { ok: true, userId: data.session.user.id };
 }
 
+export async function acessarGestaoSimples(
+  email: string,
+  senha: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const login = await supabase.auth.signInWithPassword({ email, password: senha });
+  if (!login.error && login.data.session) return { ok: true };
+
+  const mensagemLogin = login.error?.message.toLowerCase() ?? "";
+  if (!mensagemLogin.includes("invalid login credentials")) {
+    return { ok: false, error: traduzirErroAuth(login.error?.message ?? "Não foi possível entrar.") };
+  }
+
+  const cadastro = await supabase.auth.signUp({
+    email,
+    password: senha,
+    options: { emailRedirectTo: `${window.location.origin}/gestao` },
+  });
+
+  if (cadastro.error) {
+    const erro = cadastro.error.message.toLowerCase();
+    if (erro.includes("user already registered")) {
+      return { ok: false, error: "Essa conta já existe, mas a senha não confere." };
+    }
+    return { ok: false, error: traduzirErroAuth(cadastro.error.message) };
+  }
+
+  const contaJaExistia = cadastro.data.user?.identities?.length === 0;
+  if (contaJaExistia) {
+    return { ok: false, error: "Essa conta já existe, mas a senha não confere." };
+  }
+
+  if (cadastro.data.session) return { ok: true };
+
+  const novoLogin = await supabase.auth.signInWithPassword({ email, password: senha });
+  if (!novoLogin.error && novoLogin.data.session) return { ok: true };
+
+  return { ok: false, error: "Conta criada. Agora tente entrar novamente com o mesmo email e senha." };
+}
+
 export async function criarContaGestao(
   email: string,
   senha: string,

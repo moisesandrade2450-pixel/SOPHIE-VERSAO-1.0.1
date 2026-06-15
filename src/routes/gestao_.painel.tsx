@@ -1,14 +1,37 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { SophieNav } from "@/components/SophieNav";
-import { CURSOS, SALAS, salasPorCurso } from "@/lib/salas";
+import { CURSOS, SALAS, salasPorCurso, CURSO_CORES } from "@/lib/salas";
 
 type Destino =
   | { tipo: "todas" }
-  | { tipo: "curso"; curso: string }
+  | { tipo: "curso"; curso: (typeof CURSOS)[number] }
   | { tipo: "sala"; salaId: number };
+
+interface Template {
+  titulo: string;
+  mensagem: string;
+  emoji: string;
+}
+
+const TEMPLATES: Template[] = [
+  { emoji: "🔔", titulo: "Recreio", mensagem: "Atenção, está iniciando o horário do recreio." },
+  { emoji: "🏁", titulo: "Saída", mensagem: "Atenção, horário de saída. Boa tarde a todos." },
+  { emoji: "📢", titulo: "Reunião", mensagem: "Professores e alunos, dirijam-se ao auditório." },
+  {
+    emoji: "🚨",
+    titulo: "Emergência",
+    mensagem: "Mantenham a calma e sigam as orientações da equipe.",
+  },
+  { emoji: "📚", titulo: "Prova", mensagem: "Atenção, preparem-se para a aplicação da prova." },
+  {
+    emoji: "🎉",
+    titulo: "Evento",
+    mensagem: "Atenção, está iniciando o evento. Compareçam ao local indicado.",
+  },
+];
 
 export const Route = createFileRoute("/gestao_/painel")({
   head: () => ({
@@ -41,18 +64,18 @@ function PainelPage() {
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
+  const salasAlvo = useMemo(() => {
+    if (destino.tipo === "todas") return SALAS.map((s) => s.id);
+    if (destino.tipo === "curso") return salasPorCurso(destino.curso).map((s) => s.id);
+    return [destino.salaId];
+  }, [destino]);
+
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
     setErro(null);
     setFeedback(null);
     setEnviando(true);
-
-    let salasAlvo: number[] = [];
-    if (destino.tipo === "todas") salasAlvo = SALAS.map((s) => s.id);
-    else if (destino.tipo === "curso")
-      salasAlvo = salasPorCurso(destino.curso as (typeof CURSOS)[number]).map((s) => s.id);
-    else salasAlvo = [destino.salaId];
 
     const rows = salasAlvo.map((sala_id) => ({
       sala_id,
@@ -67,9 +90,10 @@ function PainelPage() {
       setErro(error.message);
       return;
     }
-    setFeedback(`Aviso enviado para ${salasAlvo.length} sala(s).`);
+    setFeedback(`✅ Aviso enviado para ${salasAlvo.length} sala(s).`);
     setTitulo("");
     setMensagem("");
+    setTimeout(() => setFeedback(null), 4000);
   };
 
   const sair = async () => {
@@ -77,126 +101,228 @@ function PainelPage() {
     navigate({ to: "/gestao" });
   };
 
+  const aplicarTemplate = (t: Template) => {
+    setTitulo(t.titulo);
+    setMensagem(t.mensagem);
+  };
+
   if (!session) return null;
+
+  const destinoLabel =
+    destino.tipo === "todas"
+      ? "Todas as salas"
+      : destino.tipo === "curso"
+        ? `Curso ${destino.curso}`
+        : `Sala ${destino.salaId}`;
 
   return (
     <div className="min-h-screen bg-background text-brand-deep">
       <SophieNav />
 
-      <section className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-20 grid lg:grid-cols-[350px_1fr] gap-8 lg:gap-12">
-        <aside className="space-y-8">
-          <header>
+      <section className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
+        <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
+          <div>
             <p className="text-xs font-mono uppercase tracking-[0.3em] text-brand-light mb-2">
               Gestão Escolar
             </p>
-            <h1 className="text-3xl font-black tracking-tight">Painel de Gestão</h1>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter">Compor Aviso</h1>
             <p className="text-muted-foreground text-sm mt-1">{session.user.email}</p>
-          </header>
-
-          <div>
-            <label className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">
-              Selecionar Destino
-            </label>
-            <select
-              value={
-                destino.tipo === "todas"
-                  ? "todas"
-                  : destino.tipo === "curso"
-                    ? `curso:${destino.curso}`
-                    : `sala:${destino.salaId}`
-              }
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "todas") setDestino({ tipo: "todas" });
-                else if (v.startsWith("curso:")) setDestino({ tipo: "curso", curso: v.slice(6) });
-                else if (v.startsWith("sala:"))
-                  setDestino({ tipo: "sala", salaId: Number(v.slice(5)) });
-              }}
-              className="mt-2 w-full p-4 border-2 border-brand-deep/10 rounded-xl font-bold bg-surface focus:outline-none focus:border-brand-deep"
+          </div>
+          <div className="flex gap-2">
+            <Link
+              to="/salas"
+              className="px-4 py-2 rounded-full border-2 border-brand-deep/20 text-xs font-bold uppercase tracking-widest hover:bg-brand-deep/5"
             >
-              <option value="todas">Todas as Salas</option>
-              <optgroup label="Por curso">
-                {CURSOS.map((c) => (
-                  <option key={c} value={`curso:${c}`}>
-                    Curso: {c}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Sala específica">
-                {SALAS.map((s) => (
-                  <option key={s.id} value={`sala:${s.id}`}>
-                    {s.nome} — {s.curso}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+              Ver salas
+            </Link>
+            <button
+              type="button"
+              onClick={sair}
+              className="px-4 py-2 rounded-full border-2 border-brand-deep/20 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:bg-brand-deep hover:text-primary-foreground transition-colors"
+            >
+              Sair
+            </button>
           </div>
+        </header>
 
-          <div className="p-6 bg-brand-light/5 border border-brand-light/20 rounded-2xl">
-            <div className="text-[10px] font-mono uppercase text-brand-light mb-2 tracking-widest">
-              Status do Sistema
-            </div>
-            <div className="flex items-center gap-2 text-sm font-bold">
-              <span className="size-2 bg-green-500 rounded-full animate-pulse" />
-              Conectado a 12 terminais
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={sair}
-            className="w-full px-6 py-3 border-2 border-brand-deep/20 rounded-full text-sm font-bold uppercase tracking-widest text-muted-foreground hover:bg-brand-deep hover:text-primary-foreground transition-colors"
+        <div className="grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
+          {/* FORM */}
+          <form
+            onSubmit={enviar}
+            className="bg-card border-4 border-brand-deep p-6 md:p-10 rounded-[2rem] space-y-8"
           >
-            Sair
-          </button>
+            {/* Templates rápidos */}
+            <div>
+              <label className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest mb-3 block">
+                Modelos rápidos
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {TEMPLATES.map((t) => (
+                  <button
+                    key={t.titulo}
+                    type="button"
+                    onClick={() => aplicarTemplate(t)}
+                    className="text-left p-3 rounded-xl border-2 border-brand-deep/10 hover:border-brand-deep hover:bg-brand-deep/5 transition-all hover:scale-[1.02]"
+                  >
+                    <div className="text-2xl">{t.emoji}</div>
+                    <div className="text-sm font-bold uppercase tracking-tight mt-1">
+                      {t.titulo}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <Link
-            to="/salas"
-            className="block text-center text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-brand-deep"
-          >
-            Ver salas →
-          </Link>
-        </aside>
-
-        <form
-          onSubmit={enviar}
-          className="bg-card border-4 border-brand-deep p-8 md:p-12 rounded-[2.5rem]"
-        >
-          <h2 className="text-xl font-bold mb-8">Compor Novo Aviso</h2>
-          <div className="space-y-6">
-            <input
-              required
-              maxLength={120}
-              type="text"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Título do Aviso (Ex: Reunião)"
-              className="w-full text-3xl md:text-4xl font-black tracking-tighter border-b-2 border-border py-4 focus:outline-none focus:border-brand-deep placeholder:text-border bg-transparent"
-            />
-            <textarea
-              required
-              maxLength={500}
-              rows={4}
-              value={mensagem}
-              onChange={(e) => setMensagem(e.target.value)}
-              placeholder="Digite a mensagem principal aqui..."
-              className="w-full text-xl md:text-2xl border-none focus:outline-none resize-none placeholder:text-border bg-transparent"
-            />
-
-            {erro && <div className="text-sm text-destructive font-medium">{erro}</div>}
-            {feedback && <div className="text-sm text-brand-deep font-medium">{feedback}</div>}
-
-            <div className="flex gap-4 pt-4">
-              <button
-                type="submit"
-                disabled={enviando}
-                className="px-8 py-4 bg-brand-deep text-primary-foreground font-bold rounded-full hover:bg-foreground transition-colors disabled:opacity-50"
+            {/* Destino */}
+            <div>
+              <label className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest mb-3 block">
+                Destino · {salasAlvo.length} sala(s)
+              </label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setDestino({ tipo: "todas" })}
+                  className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border-2 transition-all ${
+                    destino.tipo === "todas"
+                      ? "bg-brand-deep text-primary-foreground border-brand-deep"
+                      : "border-brand-deep/15 hover:border-brand-deep"
+                  }`}
+                >
+                  🌐 Todas
+                </button>
+                {CURSOS.map((c) => {
+                  const ativo = destino.tipo === "curso" && destino.curso === c;
+                  const cor = CURSO_CORES[c];
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setDestino({ tipo: "curso", curso: c })}
+                      className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border-2 transition-all"
+                      style={{
+                        borderColor: cor.accent,
+                        background: ativo ? cor.accent : "transparent",
+                        color: ativo ? "#fff" : cor.accent,
+                      }}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+              <select
+                value={destino.tipo === "sala" ? String(destino.salaId) : ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v) setDestino({ tipo: "sala", salaId: Number(v) });
+                }}
+                className="w-full p-3 border-2 border-brand-deep/10 rounded-xl text-sm font-bold bg-surface focus:outline-none focus:border-brand-deep"
               >
-                {enviando ? "Enviando..." : "Enviar Imediatamente"}
-              </button>
+                <option value="">— ou escolha uma sala específica —</option>
+                {SALAS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nome} — {s.sigla}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-        </form>
+
+            {/* Título */}
+            <div>
+              <div className="flex justify-between items-baseline mb-1">
+                <label className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">
+                  Título
+                </label>
+                <span className="text-[10px] font-mono text-muted-foreground tabular-nums">
+                  {titulo.length}/120
+                </span>
+              </div>
+              <input
+                required
+                maxLength={120}
+                type="text"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                placeholder="Ex: RECREIO"
+                className="w-full text-3xl md:text-4xl font-black tracking-tighter border-b-2 border-border py-3 focus:outline-none focus:border-brand-deep placeholder:text-border bg-transparent uppercase"
+              />
+            </div>
+
+            {/* Mensagem */}
+            <div>
+              <div className="flex justify-between items-baseline mb-1">
+                <label className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">
+                  Mensagem
+                </label>
+                <span className="text-[10px] font-mono text-muted-foreground tabular-nums">
+                  {mensagem.length}/500
+                </span>
+              </div>
+              <textarea
+                required
+                maxLength={500}
+                rows={3}
+                value={mensagem}
+                onChange={(e) => setMensagem(e.target.value)}
+                placeholder="Digite a mensagem que será exibida e falada nas salas..."
+                className="w-full text-lg md:text-xl border-2 border-border rounded-xl p-3 focus:outline-none focus:border-brand-deep resize-none placeholder:text-border bg-transparent"
+              />
+            </div>
+
+            {erro && (
+              <div className="text-sm text-destructive font-medium bg-destructive/10 p-3 rounded-lg">
+                ⚠ {erro}
+              </div>
+            )}
+            {feedback && (
+              <div className="text-sm text-brand-deep font-bold bg-green-100 p-3 rounded-lg animate-fade-in">
+                {feedback}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={enviando || !titulo.trim() || !mensagem.trim()}
+              className="w-full px-8 py-5 bg-brand-deep text-primary-foreground font-black uppercase tracking-widest rounded-2xl hover:bg-foreground transition-all disabled:opacity-50 hover:scale-[1.01] text-lg"
+            >
+              {enviando ? "Enviando..." : `📡 Enviar para ${destinoLabel}`}
+            </button>
+          </form>
+
+          {/* PREVIEW */}
+          <aside className="space-y-4">
+            <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">
+              Pré-visualização
+            </div>
+            <div className="bg-brand-deep text-primary-foreground rounded-3xl p-6 min-h-[280px] flex flex-col justify-between border-4 border-brand-deep shadow-xl">
+              <div className="text-[10px] font-mono uppercase tracking-[0.3em] opacity-70 flex items-center gap-2">
+                <span className="size-2 bg-white rounded-full animate-pulse" />
+                Como aparece na sala
+              </div>
+              <div className="text-center py-6">
+                <h2 className="text-3xl font-black uppercase tracking-tighter leading-none break-words">
+                  {titulo || "Título"}
+                </h2>
+                <p className="text-sm opacity-80 mt-3 leading-snug">
+                  {mensagem || "A mensagem aparecerá aqui..."}
+                </p>
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-widest opacity-60">
+                🔈 Voz automática 10s após envio
+              </div>
+            </div>
+
+            <div className="bg-brand-light/5 border border-brand-light/20 rounded-2xl p-4">
+              <div className="text-[10px] font-mono uppercase text-brand-light mb-2 tracking-widest">
+                Destino
+              </div>
+              <div className="text-sm font-bold">{destinoLabel}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {salasAlvo.length} terminal(is) receberão este aviso
+              </div>
+            </div>
+          </aside>
+        </div>
       </section>
     </div>
   );

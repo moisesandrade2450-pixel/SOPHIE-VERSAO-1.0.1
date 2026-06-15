@@ -49,34 +49,51 @@ function SalaPage() {
   const [now, setNow] = useState<Date>(new Date());
   const [pulse, setPulse] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [spokenIds, setSpokenIds] = useState<Set<string>>(new Set());
+  const spokenIdsRef = useRef<Set<string>>(new Set());
   const audioReadyRef = useRef(false);
   audioReadyRef.current = audioReady;
 
+  // Relógio + tick para "há X min" / contagem da voz
   useEffect(() => {
-    const tick = () => setNow(new Date());
-    tick();
-    const t = setInterval(tick, 15_000);
+    const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // Destrava áudio automaticamente na primeira interação do usuário com a página.
+  useEffect(() => {
+    if (audioReady) return;
+    const arm = () => {
+      setAudioReady(true);
+      // Garante que o contexto de áudio nasça num gesto do usuário.
+      try {
+        playChime();
+      } catch {
+        /* noop */
+      }
+    };
+    const opts = { once: true, passive: true } as const;
+    window.addEventListener("pointerdown", arm, opts);
+    window.addEventListener("keydown", arm, opts);
+    window.addEventListener("touchstart", arm, opts);
+    return () => {
+      window.removeEventListener("pointerdown", arm);
+      window.removeEventListener("keydown", arm);
+      window.removeEventListener("touchstart", arm);
+    };
+  }, [audioReady]);
 
   const falarAviso = useCallback(
     (a: Aviso) => {
       if (!sala) return;
       playChime();
-      setTimeout(
+      window.setTimeout(
         () =>
           speak(
             `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${a.titulo}. ${a.mensagem}`,
           ),
         900,
       );
-      setSpokenIds((prev) => {
-        if (prev.has(a.id)) return prev;
-        const next = new Set(prev);
-        next.add(a.id);
-        return next;
-      });
+      spokenIdsRef.current.add(a.id);
     },
     [sala],
   );
@@ -113,19 +130,14 @@ function SalaPage() {
           });
           setPulse((p) => p + 1);
           setSelectedId(novo.id);
-          // Chime imediato; voz só depois de 10s, e somente se ainda não falado.
           if (audioReadyRef.current) {
             playChime();
-            setTimeout(() => {
-              setSpokenIds((prev) => {
-                if (prev.has(novo.id)) return prev;
-                speak(
-                  `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${novo.titulo}. ${novo.mensagem}`,
-                );
-                const next = new Set(prev);
-                next.add(novo.id);
-                return next;
-              });
+            window.setTimeout(() => {
+              if (spokenIdsRef.current.has(novo.id)) return;
+              spokenIdsRef.current.add(novo.id);
+              speak(
+                `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${novo.titulo}. ${novo.mensagem}`,
+              );
             }, AUTO_SPEAK_DELAY_MS);
           }
         },
@@ -173,27 +185,27 @@ function SalaPage() {
   });
 
   const segundosDesdeCriacao = avisoAtual
-    ? Math.floor((Date.now() - new Date(avisoAtual.created_at).getTime()) / 1000)
+    ? Math.floor((now.getTime() - new Date(avisoAtual.created_at).getTime()) / 1000)
     : 0;
   const aguardandoVoz =
     audioReady &&
-    avisoAtual &&
-    !spokenIds.has(avisoAtual.id) &&
+    !!avisoAtual &&
+    !spokenIdsRef.current.has(avisoAtual.id) &&
     segundosDesdeCriacao < 10;
   const segundosParaVoz = aguardandoVoz ? Math.max(0, 10 - segundosDesdeCriacao) : 0;
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 md:p-8 bg-background"
+      className="min-h-screen flex items-center justify-center p-4 md:p-8 bg-background transition-colors duration-500"
       style={{ backgroundImage: `radial-gradient(circle at 20% 0%, ${cor.tint}, transparent 60%)` }}
     >
       <div
-        className="w-full max-w-7xl bg-card rounded-3xl overflow-hidden shadow-2xl flex flex-col border-4"
+        className="w-full max-w-7xl bg-card rounded-3xl overflow-hidden shadow-2xl flex flex-col border-4 transition-all duration-500"
         style={{ borderColor: cor.accent }}
       >
         {/* Top bar */}
         <div
-          className="px-6 md:px-10 py-4 md:py-5 flex flex-wrap gap-4 justify-between items-center text-white"
+          className="px-6 md:px-10 py-4 md:py-5 flex flex-wrap gap-4 justify-between items-center text-white transition-colors duration-500"
           style={{ background: cor.accent }}
         >
           <div className="flex items-center gap-3 md:gap-4">
@@ -210,26 +222,12 @@ function SalaPage() {
               {dataStr}
             </span>
           </div>
-          <div className="flex items-center gap-3 md:gap-4">
-            {!audioReady && (
-              <button
-                type="button"
-                onClick={() => {
-                  setAudioReady(true);
-                  playChime();
-                }}
-                className="px-3 py-1.5 rounded-full bg-white text-brand-deep text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform"
-              >
-                🔊 Ativar som
-              </button>
-            )}
-            <Link
-              to="/salas"
-              className="text-xs font-mono uppercase tracking-widest opacity-90 hover:opacity-100 hover:underline"
-            >
-              ← Salas
-            </Link>
-          </div>
+          <Link
+            to="/salas"
+            className="text-xs font-mono uppercase tracking-widest opacity-90 hover:opacity-100 hover:underline transition-opacity"
+          >
+            ← Salas
+          </Link>
         </div>
 
         {/* Body */}
@@ -242,7 +240,7 @@ function SalaPage() {
                 className="w-full animate-[fade-in_0.4s_ease-out,scale-in_0.3s_ease-out]"
               >
                 <div
-                  className="text-xs font-mono mb-4 md:mb-6 uppercase tracking-[0.4em] flex items-center justify-center gap-3"
+                  className="text-xs font-mono mb-4 md:mb-6 uppercase tracking-[0.4em] flex items-center justify-center gap-3 transition-colors"
                   style={{ color: cor.accent }}
                 >
                   <span
@@ -263,35 +261,29 @@ function SalaPage() {
 
                 {aguardandoVoz && (
                   <div
-                    className="mt-6 text-[10px] font-mono uppercase tracking-[0.3em]"
-                    style={{ color: cor.accent }}
+                    className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-mono uppercase tracking-[0.3em] animate-fade-in"
+                    style={{ background: cor.tint, color: cor.accent }}
                   >
-                    🔈 Voz automática em {segundosParaVoz}s
+                    <span
+                      className="inline-block size-1.5 rounded-full animate-pulse"
+                      style={{ background: cor.accent }}
+                    />
+                    Voz automática em {segundosParaVoz}s
                   </div>
                 )}
 
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-                  {audioReady && (
-                    <button
-                      type="button"
-                      onClick={() => falarAviso(avisoAtual)}
-                      className="px-5 py-2 rounded-full text-white text-xs font-bold uppercase tracking-widest hover:scale-105 transition-transform"
-                      style={{ background: cor.accent }}
-                    >
-                      🔁 Reproduzir agora
-                    </button>
-                  )}
-                  {selectedId && avisos[0] && selectedId !== avisos[0].id && (
+                {selectedId && avisos[0] && selectedId !== avisos[0].id && (
+                  <div className="mt-8">
                     <button
                       type="button"
                       onClick={() => setSelectedId(null)}
-                      className="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest border-2 hover:scale-105 transition-transform text-brand-deep"
+                      className="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest border-2 hover:scale-105 transition-all text-brand-deep"
                       style={{ borderColor: cor.accent }}
                     >
                       ↩ Voltar ao mais recente
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="animate-fade-in">
@@ -310,6 +302,11 @@ function SalaPage() {
                   Os comunicados enviados pela gestão aparecem aqui em tempo real, com som e voz
                   automática 10 segundos depois.
                 </p>
+                {!audioReady && (
+                  <p className="mt-4 text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground/70">
+                    Toque na tela para liberar o áudio
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -321,7 +318,7 @@ function SalaPage() {
                 className="text-[10px] font-mono uppercase tracking-[0.3em] font-bold"
                 style={{ color: cor.accent }}
               >
-                Histórico · clique p/ ouvir
+                Histórico · clique para reproduzir
               </h3>
               <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                 {avisos.length}
@@ -342,9 +339,9 @@ function SalaPage() {
                         onClick={() => {
                           setSelectedId(a.id);
                           setPulse((p) => p + 1);
-                          if (audioReady) falarAviso(a);
+                          falarAviso(a);
                         }}
-                        className={`w-full text-left rounded-xl bg-card border-2 p-3 hover:shadow-md hover:scale-[1.02] transition-all animate-fade-in ${
+                        className={`w-full text-left rounded-xl bg-card border-2 p-3 hover:shadow-md hover:scale-[1.02] transition-all duration-200 animate-fade-in ${
                           isSelected ? "" : "border-border"
                         }`}
                         style={isSelected ? { borderColor: cor.accent } : undefined}
@@ -355,17 +352,9 @@ function SalaPage() {
                         <p className="text-xs text-brand-deep/70 line-clamp-2 mt-0.5">
                           {a.mensagem}
                         </p>
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                            {tempoRelativo(a.created_at)}
-                          </p>
-                          <span
-                            className="text-[10px] font-mono uppercase tracking-widest font-bold"
-                            style={{ color: cor.accent }}
-                          >
-                            ▶ ouvir
-                          </span>
-                        </div>
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-2">
+                          {tempoRelativo(a.created_at)}
+                        </p>
                       </button>
                     </li>
                   );
@@ -375,7 +364,7 @@ function SalaPage() {
           </aside>
         </div>
 
-        <div className="h-2 md:h-3 w-full" style={{ background: cor.accent }} />
+        <div className="h-2 md:h-3 w-full transition-colors" style={{ background: cor.accent }} />
       </div>
     </div>
   );

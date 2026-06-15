@@ -25,25 +25,7 @@ export const Route = createFileRoute("/salas_/$salaId")({
   component: SalaPage,
 });
 
-const dismissedKey = (salaId: number) => `sophie:dismissed:${salaId}`;
-function loadDismissed(salaId: number): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const raw = window.localStorage.getItem(dismissedKey(salaId));
-    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
-  } catch {
-    return new Set();
-  }
-}
-function saveDismissed(salaId: number, set: Set<string>) {
-  try {
-    // Cap to last 200 IDs to avoid bloat
-    const arr = Array.from(set).slice(-200);
-    window.localStorage.setItem(dismissedKey(salaId), JSON.stringify(arr));
-  } catch {
-    // ignore
-  }
-}
+const AUTO_SPEAK_DELAY_MS = 10_000;
 
 function tempoRelativo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -63,15 +45,13 @@ function SalaPage() {
   const sala = useMemo(() => findSala(idNum), [idNum]);
 
   const [avisos, setAvisos] = useState<Aviso[]>([]);
-  const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed(idNum));
   const [audioReady, setAudioReady] = useState(false);
   const [now, setNow] = useState<Date>(new Date());
   const [pulse, setPulse] = useState(0);
-  const firstLoadRef = useRef(true);
-
-  useEffect(() => {
-    setDismissed(loadDismissed(idNum));
-  }, [idNum]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [spokenIds, setSpokenIds] = useState<Set<string>>(new Set());
+  const audioReadyRef = useRef(false);
+  audioReadyRef.current = audioReady;
 
   useEffect(() => {
     const tick = () => setNow(new Date());
@@ -79,6 +59,27 @@ function SalaPage() {
     const t = setInterval(tick, 15_000);
     return () => clearInterval(t);
   }, []);
+
+  const falarAviso = useCallback(
+    (a: Aviso) => {
+      if (!sala) return;
+      playChime();
+      setTimeout(
+        () =>
+          speak(
+            `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${a.titulo}. ${a.mensagem}`,
+          ),
+        900,
+      );
+      setSpokenIds((prev) => {
+        if (prev.has(a.id)) return prev;
+        const next = new Set(prev);
+        next.add(a.id);
+        return next;
+      });
+    },
+    [sala],
+  );
 
   useEffect(() => {
     if (!sala) return;
@@ -89,10 +90,9 @@ function SalaPage() {
       .select("id, sala_id, titulo, mensagem, created_at")
       .eq("sala_id", idNum)
       .order("created_at", { ascending: false })
-      .limit(15)
+      .limit(50)
       .then(({ data }) => {
         if (mounted && data) setAvisos(data as Aviso[]);
-        firstLoadRef.current = false;
       });
 
     const channel = supabase
@@ -109,18 +109,24 @@ function SalaPage() {
           const novo = payload.new as Aviso;
           setAvisos((prev) => {
             if (prev.some((a) => a.id === novo.id)) return prev;
-            return [novo, ...prev].slice(0, 15);
+            return [novo, ...prev].slice(0, 50);
           });
           setPulse((p) => p + 1);
-          if (audioReady) {
+          setSelectedId(novo.id);
+          // Chime imediato; voz só depois de 10s, e somente se ainda não falado.
+          if (audioReadyRef.current) {
             playChime();
-            setTimeout(
-              () =>
+            setTimeout(() => {
+              setSpokenIds((prev) => {
+                if (prev.has(novo.id)) return prev;
                 speak(
                   `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${novo.titulo}. ${novo.mensagem}`,
-                ),
-              900,
-            );
+                );
+                const next = new Set(prev);
+                next.add(novo.id);
+                return next;
+              });
+            }, AUTO_SPEAK_DELAY_MS);
           }
         },
       )
@@ -130,25 +136,19 @@ function SalaPage() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [idNum, sala, audioReady]);
+  }, [idNum, sala]);
 
-  const visiveis = useMemo(
-    () => avisos.filter((a) => !dismissed.has(a.id)),
-    [avisos, dismissed],
-  );
-  const aviso = visiveis[0] ?? null;
-  const historico = visiveis.slice(1, 6);
+  const avisoAtual = useMemo(() => {
+    if (selectedId) {
+      const found = avisos.find((a) => a.id === selectedId);
+      if (found) return found;
+    }
+    return avisos[0] ?? null;
+  }, [avisos, selectedId]);
 
-  const dispensar = useCallback(
-    (id: string) => {
-      setDismissed((prev) => {
-        const next = new Set(prev);
-        next.add(id);
-        saveDismissed(idNum, next);
-        return next;
-      });
-    },
-    [idNum],
+  const historico = useMemo(
+    () => avisos.filter((a) => a.id !== avisoAtual?.id).slice(0, 12),
+    [avisos, avisoAtual],
   );
 
   if (!sala) {
@@ -171,6 +171,16 @@ function SalaPage() {
     day: "2-digit",
     month: "long",
   });
+
+  const segundosDesdeCriacao = avisoAtual
+    ? Math.floor((Date.now() - new Date(avisoAtual.created_at).getTime()) / 1000)
+    : 0;
+  const aguardandoVoz =
+    audioReady &&
+    avisoAtual &&
+    !spokenIds.has(avisoAtual.id) &&
+    segundosDesdeCriacao < 10;
+  const segundosParaVoz = aguardandoVoz ? Math.max(0, 10 - segundosDesdeCriacao) : 0;
 
   return (
     <div
@@ -207,15 +217,6 @@ function SalaPage() {
                 onClick={() => {
                   setAudioReady(true);
                   playChime();
-                  if (aviso) {
-                    setTimeout(
-                      () =>
-                        speak(
-                          `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${aviso.titulo}. ${aviso.mensagem}`,
-                        ),
-                      900,
-                    );
-                  }
                 }}
                 className="px-3 py-1.5 rounded-full bg-white text-brand-deep text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform"
               >
@@ -232,12 +233,12 @@ function SalaPage() {
         </div>
 
         {/* Body */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px]">
           {/* Main aviso */}
           <div className="relative min-h-[55vh] flex flex-col items-center justify-center p-8 md:p-16 text-center overflow-hidden bg-card">
-            {aviso ? (
+            {avisoAtual ? (
               <div
-                key={`${aviso.id}-${pulse}`}
+                key={`${avisoAtual.id}-${pulse}`}
                 className="w-full animate-[fade-in_0.4s_ease-out,scale-in_0.3s_ease-out]"
               >
                 <div
@@ -248,42 +249,48 @@ function SalaPage() {
                     className="inline-block size-2 rounded-full animate-ping"
                     style={{ background: cor.accent }}
                   />
-                  Comunicado recebido · {tempoRelativo(aviso.created_at)}
+                  {selectedId && selectedId !== avisos[0]?.id
+                    ? "Reproduzindo do histórico"
+                    : "Comunicado recebido"}{" "}
+                  · {tempoRelativo(avisoAtual.created_at)}
                 </div>
                 <h2 className="text-5xl md:text-7xl lg:text-[6rem] font-black leading-[0.85] tracking-tighter mb-6 md:mb-10 uppercase break-words max-w-full text-brand-deep">
-                  {aviso.titulo}
+                  {avisoAtual.titulo}
                 </h2>
                 <p className="text-xl md:text-3xl font-medium text-brand-deep/70 max-w-3xl mx-auto leading-snug">
-                  {aviso.mensagem}
+                  {avisoAtual.mensagem}
                 </p>
+
+                {aguardandoVoz && (
+                  <div
+                    className="mt-6 text-[10px] font-mono uppercase tracking-[0.3em]"
+                    style={{ color: cor.accent }}
+                  >
+                    🔈 Voz automática em {segundosParaVoz}s
+                  </div>
+                )}
+
                 <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
                   {audioReady && (
                     <button
                       type="button"
-                      onClick={() => {
-                        playChime();
-                        setTimeout(
-                          () =>
-                            speak(
-                              `Atenção, sala ${String(sala.id).padStart(2, "0")}. ${aviso.titulo}. ${aviso.mensagem}`,
-                            ),
-                          900,
-                        );
-                      }}
+                      onClick={() => falarAviso(avisoAtual)}
                       className="px-5 py-2 rounded-full text-white text-xs font-bold uppercase tracking-widest hover:scale-105 transition-transform"
                       style={{ background: cor.accent }}
                     >
-                      🔁 Repetir aviso
+                      🔁 Reproduzir agora
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => dispensar(aviso.id)}
-                    className="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest border-2 hover:scale-105 transition-transform text-brand-deep"
-                    style={{ borderColor: cor.accent }}
-                  >
-                    ✕ Dispensar aviso
-                  </button>
+                  {selectedId && avisos[0] && selectedId !== avisos[0].id && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(null)}
+                      className="px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest border-2 hover:scale-105 transition-transform text-brand-deep"
+                      style={{ borderColor: cor.accent }}
+                    >
+                      ↩ Voltar ao mais recente
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
@@ -300,7 +307,8 @@ function SalaPage() {
                   no momento
                 </h2>
                 <p className="mt-6 text-sm md:text-base text-muted-foreground max-w-md mx-auto">
-                  Os comunicados enviados pela gestão aparecem aqui em tempo real, com som e voz.
+                  Os comunicados enviados pela gestão aparecem aqui em tempo real, com som e voz
+                  automática 10 segundos depois.
                 </p>
               </div>
             )}
@@ -313,22 +321,11 @@ function SalaPage() {
                 className="text-[10px] font-mono uppercase tracking-[0.3em] font-bold"
                 style={{ color: cor.accent }}
               >
-                Histórico
+                Histórico · clique p/ ouvir
               </h3>
-              {visiveis.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const all = new Set(dismissed);
-                    visiveis.forEach((a) => all.add(a.id));
-                    saveDismissed(idNum, all);
-                    setDismissed(all);
-                  }}
-                  className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-brand-deep"
-                >
-                  Limpar tudo
-                </button>
-              )}
+              <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                {avisos.length}
+              </span>
             </div>
             {historico.length === 0 ? (
               <p className="text-xs text-muted-foreground italic">
@@ -336,34 +333,43 @@ function SalaPage() {
               </p>
             ) : (
               <ul className="space-y-3 overflow-y-auto max-h-[60vh] pr-1">
-                {historico.map((a) => (
-                  <li
-                    key={a.id}
-                    className="group rounded-xl bg-card border border-border p-3 hover:shadow-md transition-shadow animate-fade-in"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+                {historico.map((a) => {
+                  const isSelected = a.id === selectedId;
+                  return (
+                    <li key={a.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedId(a.id);
+                          setPulse((p) => p + 1);
+                          if (audioReady) falarAviso(a);
+                        }}
+                        className={`w-full text-left rounded-xl bg-card border-2 p-3 hover:shadow-md hover:scale-[1.02] transition-all animate-fade-in ${
+                          isSelected ? "" : "border-border"
+                        }`}
+                        style={isSelected ? { borderColor: cor.accent } : undefined}
+                      >
                         <p className="text-sm font-bold text-brand-deep truncate uppercase tracking-tight">
                           {a.titulo}
                         </p>
                         <p className="text-xs text-brand-deep/70 line-clamp-2 mt-0.5">
                           {a.mensagem}
                         </p>
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-2">
-                          {tempoRelativo(a.created_at)}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => dispensar(a.id)}
-                        aria-label="Dispensar"
-                        className="opacity-40 group-hover:opacity-100 text-muted-foreground hover:text-brand-deep transition-opacity text-sm leading-none"
-                      >
-                        ✕
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                            {tempoRelativo(a.created_at)}
+                          </p>
+                          <span
+                            className="text-[10px] font-mono uppercase tracking-widest font-bold"
+                            style={{ color: cor.accent }}
+                          >
+                            ▶ ouvir
+                          </span>
+                        </div>
                       </button>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </aside>

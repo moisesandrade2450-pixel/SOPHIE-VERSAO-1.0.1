@@ -41,6 +41,54 @@ export type Database = {
         }
         Relationships: []
       }
+      avisos_agendados: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_unica: string | null
+          dias_semana: number[] | null
+          enviado_por: string
+          horarios: string[] | null
+          id: string
+          mensagem: string
+          sala_ids: number[]
+          tipo: Database["public"]["Enums"]["tipo_agendamento"]
+          titulo: string
+          ultima_execucao: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_unica?: string | null
+          dias_semana?: number[] | null
+          enviado_por: string
+          horarios?: string[] | null
+          id?: string
+          mensagem: string
+          sala_ids: number[]
+          tipo: Database["public"]["Enums"]["tipo_agendamento"]
+          titulo: string
+          ultima_execucao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_unica?: string | null
+          dias_semana?: number[] | null
+          enviado_por?: string
+          horarios?: string[] | null
+          id?: string
+          mensagem?: string
+          sala_ids?: number[]
+          tipo?: Database["public"]["Enums"]["tipo_agendamento"]
+          titulo?: string
+          ultima_execucao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -74,9 +122,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      processar_avisos_agendados: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "professor" | "diretora"
+      tipo_agendamento: "unico" | "diario" | "semanal"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -205,6 +255,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["professor", "diretora"],
+      tipo_agendamento: ["unico", "diario", "semanal"],
     },
   },
 } as const

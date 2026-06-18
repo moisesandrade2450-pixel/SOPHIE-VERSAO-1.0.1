@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:is(.dark *));
 
 /*
  * SOPHIE — Sistema escolar de avisos
@@ -90,55 +90,6 @@
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(0.93 0.01 320);
   --sidebar-ring: oklch(0.5 0.21 322);
-}
-
-/*
- * Dark mode — mesma identidade roxa, invertida.
- * brand-deep (usado como texto/headings) vira lilás claro.
- * brand-light (usado como acento) vira um roxo mais saturado.
- * Backgrounds em roxo-quase-preto pra dialogar com a paleta.
- */
-.dark {
-  --background: oklch(0.16 0.04 315);
-  --foreground: oklch(0.93 0.04 320);
-  --card: oklch(0.21 0.05 318);
-  --card-foreground: oklch(0.93 0.04 320);
-  --popover: oklch(0.21 0.05 318);
-  --popover-foreground: oklch(0.93 0.04 320);
-
-  --primary: oklch(0.78 0.15 322); /* lilás luminoso */
-  --primary-foreground: oklch(0.18 0.06 320);
-  --secondary: oklch(0.25 0.05 318);
-  --secondary-foreground: oklch(0.93 0.04 320);
-  --muted: oklch(0.24 0.04 318);
-  --muted-foreground: oklch(0.72 0.05 320);
-  --accent: oklch(0.6 0.2 322);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.3 0.05 318);
-  --input: oklch(0.3 0.05 318);
-  --ring: oklch(0.78 0.15 322);
-
-  /* SOPHIE brand — invertido pra continuar legível */
-  --brand-deep: oklch(0.86 0.1 322);   /* foreground luminoso */
-  --brand-light: oklch(0.65 0.18 322); /* acento médio */
-  --surface: oklch(0.19 0.05 318);
-
-  --chart-1: oklch(0.78 0.15 322);
-  --chart-2: oklch(0.65 0.18 322);
-  --chart-3: oklch(0.6 0.16 290);
-  --chart-4: oklch(0.7 0.14 340);
-  --chart-5: oklch(0.55 0.2 305);
-
-  --sidebar: oklch(0.19 0.05 318);
-  --sidebar-foreground: oklch(0.93 0.04 320);
-  --sidebar-primary: oklch(0.78 0.15 322);
-  --sidebar-primary-foreground: oklch(0.18 0.06 320);
-  --sidebar-accent: oklch(0.6 0.2 322);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.3 0.05 318);
-  --sidebar-ring: oklch(0.78 0.15 322);
 }
 
 @keyframes sophieSlideUp {

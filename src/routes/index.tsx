@@ -5,16 +5,17 @@ import { CURSO_CORES, CURSOS } from "@/lib/salas";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SOPHIE — Sistema escolar de avisos em tempo real" },
+      { title: "SOPHIE — Avisos escolares em tempo real, com voz e agendamento" },
       {
         name: "description",
         content:
-          "SOPHIE conecta a gestão escolar às salas de aula com avisos instantâneos, som e voz.",
+          "A gestão envia avisos para as salas em segundos, com som, voz automática e agendamento por data, horário diário ou semanal. 12 salas em 4 cursos.",
       },
       { property: "og:title", content: "SOPHIE — Avisos em tempo real" },
       {
         property: "og:description",
-        content: "Comunicação escolar instantânea para 12 salas em 4 cursos.",
+        content:
+          "Envie avisos agora ou agende recorrências. Voz automática 10s após o envio, histórico por sala e calendário visual.",
       },
     ],
   }),

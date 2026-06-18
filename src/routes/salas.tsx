@@ -9,12 +9,13 @@ export const Route = createFileRoute("/salas")({
       {
         name: "description",
         content:
-          "Acesse o painel de qualquer uma das 12 salas e receba avisos da gestão em tempo real.",
+          "Selecione uma das 12 salas para receber avisos da gestão em tempo real, com voz automática e histórico dos últimos comunicados.",
       },
       { property: "og:title", content: "Salas — SOPHIE" },
       {
         property: "og:description",
-        content: "12 salas ativas em 4 cursos. Selecione e visualize avisos em tempo real.",
+        content:
+          "12 salas em 4 cursos. Avisos ao vivo, voz automática e histórico para reprodução.",
       },
     ],
   }),

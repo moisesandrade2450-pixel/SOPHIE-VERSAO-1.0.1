@@ -72,22 +72,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SOPHIE — Avisos escolares em tempo real." },
+      { title: "SOPHIE — Comunicação escolar em tempo real" },
       {
         name: "description",
-        content: "Sistema escolar de avisos em tempo real para salas de aula.",
+        content:
+          "Plataforma de avisos sonoros e visuais para salas de aula. Envie agora ou agende avisos recorrentes para uma ou várias salas com voz automática.",
       },
-      { property: "og:title", content: "SOPHIE — Avisos escolares em tempo real." },
+      { property: "og:title", content: "SOPHIE — Comunicação escolar em tempo real" },
       {
         property: "og:description",
-        content: "Sistema escolar de avisos em tempo real para salas de aula.",
+        content:
+          "Envie avisos instantâneos ou agendados (único, diário ou semanal) para qualquer sala. Voz automática, histórico e calendário integrados.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "SOPHIE — Avisos escolares em tempo real." },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "SOPHIE — Comunicação escolar em tempo real" },
       {
         name: "twitter:description",
-        content: "Sistema escolar de avisos em tempo real para salas de aula.",
+        content:
+          "Avisos instantâneos e agendados com voz automática para todas as salas da escola.",
       },
       {
         property: "og:image",

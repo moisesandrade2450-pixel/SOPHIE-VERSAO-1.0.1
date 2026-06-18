@@ -267,7 +267,7 @@ function EnviarAgora({ session }: { session: Session }) {
         : `Sala ${destino.salaId}`;
 
   return (
-    <div className="grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 animate-fade-in">
+    <div className="max-w-3xl mx-auto animate-fade-in">
       <form
         onSubmit={enviar}
         className="bg-card border-4 border-brand-deep p-6 md:p-10 rounded-[2rem] space-y-8"
@@ -565,44 +565,6 @@ function EnviarAgora({ session }: { session: Session }) {
               : `📡 Enviar para ${destinoLabel}`}
         </button>
       </form>
-
-      <aside className="space-y-4">
-        <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest">
-          Pré-visualização
-        </div>
-        <div className="bg-brand-deep text-primary-foreground rounded-3xl p-6 min-h-[280px] flex flex-col justify-between border-4 border-brand-deep shadow-xl">
-          <div className="text-[10px] font-mono uppercase tracking-[0.3em] opacity-70 flex items-center gap-2">
-            <span className="size-2 bg-white rounded-full animate-pulse" />
-            Como aparece na sala
-          </div>
-          <div className="text-center py-6">
-            <h2 className="text-3xl font-black uppercase tracking-tighter leading-none break-words">
-              {titulo || "Título"}
-            </h2>
-            <p className="text-sm opacity-80 mt-3 leading-snug">
-              {mensagem || "A mensagem aparecerá aqui..."}
-            </p>
-          </div>
-          <div className="text-[10px] font-mono uppercase tracking-widest opacity-60">
-            🔈 Voz automática 10s após envio
-          </div>
-        </div>
-
-        <div className="bg-brand-light/5 border border-brand-light/20 rounded-2xl p-4">
-          <div className="text-[10px] font-mono uppercase text-brand-light mb-2 tracking-widest">
-            Destino
-          </div>
-          <div className="text-sm font-bold">{destinoLabel}</div>
-          {salasExtras.size > 0 && (
-            <div className="text-xs text-muted-foreground mt-1">
-              + {salasExtras.size} extra(s)
-            </div>
-          )}
-          <div className="text-xs text-muted-foreground mt-1">
-            {salasAlvo.length} terminal(is) receberão este aviso
-          </div>
-        </div>
-      </aside>
     </div>
   );
 }

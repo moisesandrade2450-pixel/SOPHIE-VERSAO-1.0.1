@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { ThemeToggle } from "./ThemeToggle";
 
 export function SophieNav() {
   return (
@@ -16,12 +15,9 @@ export function SophieNav() {
         </Link>
         <span>Sistema Escolar v1.0</span>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="md:hidden flex gap-4 font-mono text-xs uppercase tracking-widest opacity-70">
-          <Link to="/salas">Salas</Link>
-          <Link to="/gestao">Gestão</Link>
-        </div>
-        <ThemeToggle />
+      <div className="md:hidden flex gap-4 font-mono text-xs uppercase tracking-widest opacity-70">
+        <Link to="/salas">Salas</Link>
+        <Link to="/gestao">Gestão</Link>
       </div>
     </nav>
   );
